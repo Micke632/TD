@@ -1,0 +1,21 @@
+{
+  "name": "tower",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "helmet": "^3.13.0",
+    "mongoose": "^5.2.13",
+    "mysql": "^2.16.0"
+  },
+  "devDependencies": {
+    "mocha": "^5.2.0"
+  }
+}
