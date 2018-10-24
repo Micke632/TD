@@ -220,13 +220,13 @@ class EnemyManager
       else if (type===EnemyType.MORPHG)
       {
          e = new Enemy3(this,pos,asteroidImageAnim,this.asteridInv);
-         this.setHp(e,60,lvl);
-         this.setSpeed(e,35,lvl);
+         this.setHp(e,55,lvl);
+         this.setSpeed(e,25,lvl);
       }
       else if (type===EnemyType.KAKA)
       {
          e = new Enemy2B(this,pos,asteroidImageAnim2,this.asteriod);
-         this.setHp(e,90,lvl);
+         this.setHp(e,80,lvl);
          this.setSpeed(e,25,lvl);
       }
       else if (type===EnemyType.GRRR)
@@ -259,8 +259,8 @@ class EnemyManager
          e = new Enemy(this,pos,asteroidImageAnim);
          e.prio = 3;
          e.name = "Boss";
-         this.setHp(e,150,lvl);
-         this.setSpeed(e,40,lvl);
+         this.setHp(e,140,lvl);
+         this.setSpeed(e,35,lvl);
       }
       else if (type===EnemyType.IMMUNE)
       {

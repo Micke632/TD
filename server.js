@@ -50,7 +50,7 @@ app.use(bodyParser.urlencoded({extended:false}))
 app.use(bodyParser.json())
 
 app.get('/getBestScore',function(req,res) {
-   con.query('SELECT * FROM scores ORDER BY score LIMIT 5', (err,rows) => {
+   con.query('SELECT * FROM scores ORDER BY score DESC LIMIT 5', (err,rows) => {
       if(err) throw err;
 
       console.log('Data received from Db:\n');
@@ -169,7 +169,6 @@ async function removeScoresLowerThan(user,score)
             res.send("1");
         });
      }
-     //save
 
 
   });

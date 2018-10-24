@@ -3,7 +3,7 @@
 
 
 
-var PathResult =
+var PathResultEnum =
 {
    ENUM_GO_ON:0,
    ENUM_NEW_CELL:1,
@@ -16,10 +16,11 @@ var PathResult =
 
 class PathHelper
 {
-   constructor(pathFinder,width,ch,cw,fnc,maxPixelMove)
+   constructor(pathFinder,width,height,ch,cw,fnc,maxPixelMove)
    {
       this.nextCell = null;
-      this.width = width;
+      this.imageWidth = width;
+      this.imageHeight = height;
       this.cell_height = ch;
       this.cell_width  = cw;
       this.mw = pathFinder;
@@ -106,36 +107,36 @@ class PathHelper
             {
                this.maxmov =this.max;
                this.direction = this.getNewDirection(this.nextCell,cell);
-               return PathResult.ENUM_NEW_CELL;
+               return PathResultEnum.ENUM_NEW_CELL;
             }
          }
          {
             this.maxmov = pixels_until_inside;
-            return PathResult.ENUM_GO_ON;
+            return PathResultEnum.ENUM_GO_ON;
 
          }
       }
 
       if ( !cell || (cell.tower || cell.hidden) )
       {
-         return PathResult.ENUM_LOST;
+         return PathResultEnum.ENUM_LOST;
       }
 
 
       if (this.stuck)
       {
-         return PathResult.ENUM_STUCK;
+         return PathResultEnum.ENUM_STUCK;
       }
 
 
 
      if (!this.nextCell)
      {
-        return PathResult.ENUM_REACH_DEST;
+        return PathResultEnum.ENUM_REACH_DEST;
      }
 
 
-      return PathResult.ENUM_GO_ON;
+      return PathResultEnum.ENUM_GO_ON;
    }
 
    getNextCell()
@@ -202,7 +203,7 @@ class PathHelper
          let cell_y_d = cell.y + this.cell_height;
          //make sure the bottom is above
 
-         let ydiff = y + this.width - cell_y_d;
+         let ydiff = y + this.imageHeight - cell_y_d;
 
          if (ydiff <  2)
          {
@@ -210,7 +211,7 @@ class PathHelper
          }
          else
          {
-            return Math.floor(ydiff);
+            return ydiff;
 
          }
 
@@ -219,14 +220,14 @@ class PathHelper
       else if (this.direction==1)   //left
       {
          let cell_r = cell.x +this.cell_width;
-         let xdiff =  x + this.width -  cell_r ;
+         let xdiff =  x + this.imageWidth -  cell_r ;
          if ( xdiff < 2  )
          {
             return 0;
          }
          else
          {
-            return Math.floor(xdiff);
+            return xdiff;
          }
       }
       else{

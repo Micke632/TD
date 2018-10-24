@@ -243,8 +243,21 @@ Tower.prototype.getLevel = function()
    return this.level;
 }
 
-
-
+//let a  =this.getPrio();
+Tower.prototype.fireModeDesc  =function()
+{
+   let a = this.getPrio();
+   let fireModeS = "Default";
+   if (a==1)
+   {
+      fireModeS = "Highest Prio";
+   }
+   else if (a==2)
+   {
+      fireModeS = "Closest exit";
+   }
+   return fireModeS;
+}
 
 
 Tower.prototype.getDescription = function()
@@ -256,20 +269,9 @@ Tower.prototype.getDescription = function()
    let l = this.getLevel();
    let c = this.getUpgradeCost();
    let k = this.kills;
-   let a  =this.getPrio();
-
    let d = this.doGetInfo()
-   let fireModeS = "Default";
-   if (a==1)
-   {
-      fireModeS = "Highest Prio";
-   }
-   else if (a==2)
-   {
-      fireModeS = "Closest exit";
-   }
 
-   let print = n + "\nScore: " + int(s) + "\nLevel: " + l + "\nUpgrade: " + c + "\nKills: "+k+"\nF.Mode:"+fireModeS +d;
+   let print = n + "\nScore: " + int(s) + "\nLevel: " + l + "\nUpgrade: " + c + "\nKills: "+k +d;
    if (this.veteran)
    {
       print +="\nVeteran";
@@ -377,6 +379,13 @@ Tower.prototype.canUpgrade = function()
 {
    if(this.level >=4) return false;
    return g_points>= this.upgradeCost;
+}
+
+Tower.prototype.canRepair = function()
+{
+   if (this.disabled && this.repairTime == 0) return true;
+
+   return false;
 }
 
 Tower.prototype.canChangeFireMode  =function()
@@ -1016,6 +1025,23 @@ Tower2.prototype.notifyTower = function(cell)
 
 }
 
+Tower2.prototype.doGetInfo = function()
+{
+   let h = this.getHitPoint();
+   let f = this.getFireSpeed();
+   let r = this.getRange();
+   let a = this.getAimSpeed();
+
+   let print ="\nHitPoint: " + int(h) + "\nRange: "+int(r)+"\nReload: "+f/1000 + "\nAimSpeed: "+a.toFixed(2);
+
+   let s = this.fireModeDesc();
+
+   print = print + "\nF.Mode:"+s;
+   return print;
+}
+
+
+
 /* Tower2.prototype.doShow = function()
 {
 //draw aim
@@ -1060,6 +1086,24 @@ TowerSniper.prototype.canChangeFireMode  =function()
 {
    return true;
 }
+
+TowerSniper.prototype.doGetInfo = function()
+{
+   let h = this.getHitPoint();
+   let f = this.getFireSpeed();
+   let r = this.getRange();
+   let a = this.getAimSpeed();
+
+   let print ="\nHitPoint: " + int(h) + "\nRange: "+int(r)+"\nReload: "+f/1000 + "\nAimSpeed: "+a.toFixed(2);
+
+   let s = this.fireModeDesc();
+
+   print = print + "\nF.Mode:"+s;
+   return print;
+
+}
+
+
 
 TowerSniper.prototype.doUpgrade = function()
 {
@@ -1457,18 +1501,13 @@ TowerSlow.prototype.fire = function()
             g_headlines.push("One of your towers are now a veteran..");
          }
 
-
-         //bullets.push(new Wind(this.position.x,this.position.y,this.aim));
          bulletHandler.create(this.position.x,this.position.y,this.turretDirection,this.getRange(),color(0,0,240,222),3,2 ,60);
          let v = this.turretDirection.copy();
          v.rotate(0.10);
-         //bullets.push(new Wind(this.position.x,this.position.y,v));
          bulletHandler.create(this.position.x,this.position.y,v,this.getRange(),color(0,0,240,222),3,2,60 );
          v.rotate(0.10);
-         //bullets.push(new Wind(this.position.x,this.position.y,v));
          bulletHandler.create(this.position.x,this.position.y,v,this.getRange(),color(0,0,240,222),3,2 ,60);
          v.rotate(0.10);
-         //bullets.push(new Wind(this.position.x,this.position.y,v));
          bulletHandler.create(this.position.x,this.position.y,v,this.getRange(),color(0,0,240,222),3,2 ,60);
       }
       this.currentEnemy = null;
@@ -1522,8 +1561,8 @@ Tower4.prototype.doGetInfo = function()
 {
 
 
-   let print = "\nBoost hitpoint: "+this.level  *2;
-   print += "\nBoost reload time: "+this.level  *50;
+   let print = "\nBoost hitpoint: ";
+   print += "\nBoost reload time:";
    print += "\nBoost aim speed: ";
 
    return print;
@@ -1604,10 +1643,9 @@ function TowerAA(i,j,img)
    this.cost=100;
    this.upgradeCost = 75;
    this.findTargetRate=3;
-   //this.myenemies=[];
    this.type  = 2 ;
    this.aimSpeed = 0.5;
-   //this.direc = [createVector(1,0),createVector(-1,0),createVector(0,-1),createVector(0,1)];
+
 }
 
 
@@ -1622,65 +1660,10 @@ TowerAA.prototype.doUpgrade = function()
 
 }
 
-/*
-TowerAA.prototype.aimAt = function(e,newtarget)
-{
-   let dir = p5.Vector.sub(e.vector,this.position);
 
-   let mag = dir.mag();
-
-   dir.y *=-1;
-   this.turretDirection = this.direc[getRndInteger(0,4)];
-   this.turretDirection.normalize();
-
-
-   return mag;
-
-}
-*/
-/*
-TowerAA.prototype.canFire = function()
-{
-   return true;
-}
-*/
-/*
-TowerAA.prototype.fire = function()
-{
-   this.findTarget();
-
-//   if (this.selected)
-   //   gun_fire2.play();
-
-   //for (let i=0;i<this.direc.length;i++)
-   //   bulletHandler.create(this.position.x,this.position.y,this.direc[i],this.getRange(),color(55,244,244,222),2,0,300);
-
-   let h = this.getHitPoint();
-   for (let i=0;i<this.myenemies.length;i++)
-   {
-      let e = this.myenemies[i];
-
-
-      if (e.damage(h))
-      {
-
-         this.tower_score+=h;
-         if (e.remove)
-         {
-            this.kills+=1;
-            this.tower_score+=5;
-         }
-
-      }
-   }
-
-
-}
-*/
 
 TowerAA.prototype.findTarget = function()
 {
-   //this.myenemies.length  = 0;
 
 
    for (let i=0;i<g_planes.length;i++)
@@ -1694,10 +1677,7 @@ TowerAA.prototype.findTarget = function()
 
          this.currentEnemy  = e;
          return;
-      //   this.myenemies.push(e);
       }
-
-
 
    }
 
@@ -1806,7 +1786,7 @@ class TowerTool
       }
       if (n == "SnipeTower")
       {
-         print += "\nLong range gun\nSlow reload.";
+         print += "\nLong range gun\nSlow reload and aim.";
       }
       if (n == "AATower")
       {

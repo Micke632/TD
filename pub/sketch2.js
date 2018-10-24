@@ -8,7 +8,7 @@ const SIDE = 140;
 const TOP = 40;
 const LEVEL_TIME = 25000;
 
-
+const START_GOLD  =70;
 
 var g_enemies = [];
 var g_towers = [];
@@ -212,7 +212,7 @@ function resetAll()
    g_total_score  = 0 ;
    g_enemies_escaped = 0;
    towers_removed  = 0;
-   g_points = 70;
+   g_points = START_GOLD;
    g_towers = [];
    g_enemies = [];
    g_planes = [];
@@ -1026,7 +1026,7 @@ function updateSelecedTowerInfoWindow()
          selectedTowerInfoWindow.rect(60,selectedTowerInfoWindow.height - 40 ,25,20);
 
          //repair
-         if (currentSelected.disabled)
+         if (currentSelected.canRepair())
             selectedTowerInfoWindow.rect(10,selectedTowerInfoWindow.height - 20 ,45,20);
 
          //fire mode
@@ -1043,7 +1043,7 @@ function updateSelecedTowerInfoWindow()
             selectedTowerInfoWindow.text("Upgrade",14,selectedTowerInfoWindow.height - 25);
          }
          selectedTowerInfoWindow.text("Sell",65,selectedTowerInfoWindow.height - 25);
-         if (currentSelected.disabled )
+         if (currentSelected.canRepair())
          {
             selectedTowerInfoWindow.text("Repair",15,selectedTowerInfoWindow.height - 5);
          }

@@ -133,6 +133,7 @@ class Enemy
 
       this.pathHelper = new PathHelper(new MazeWalker(Statics.exitCells),
                                  this.images[0].width,
+                                 this.images[0].height,
                                  CELL_WIDTH,
                                  CELL_HEIGHT,
                                  function(){
@@ -410,11 +411,11 @@ class Enemy
 
       let result = this.pathHelper.checkPath(this.cell,this.vector.x,this.vector.y);
 
-      if (result == PathResult.ENUM_NEW_CELL)
+      if (result == PathResultEnum.ENUM_NEW_CELL)
       {
          this.makeDirectionFrom(this.pathHelper.getDirection());
       }
-      else if (result == PathResult.ENUM_REACH_DEST)
+      else if (result == PathResultEnum.ENUM_REACH_DEST)
       {
          //console.log("dest");
          //some have towers as destination
@@ -431,11 +432,11 @@ class Enemy
          }
 
       }
-      else if (result == PathResult.ENUM_STUCK)
+      else if (result == PathResultEnum.ENUM_STUCK)
       {
          return;
       }
-      else if (result == PathResult.ENUM_LOST)
+      else if (result == PathResultEnum.ENUM_LOST)
       {
          let c = this.findCellAround(this.cell);
          if (!c)
