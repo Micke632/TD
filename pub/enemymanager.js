@@ -197,9 +197,9 @@ class EnemyManager
          this.setSpeed(e,15,lvl);
          if (lvl<10)
          {
-            this.setHp(e,50,lvl);
+            this.setHp(e,40,lvl);
          }else
-         this.setHp(e,70,lvl);
+         this.setHp(e,80,lvl);
       }
       else if (type===EnemyType.BIG)
       {
@@ -259,7 +259,7 @@ class EnemyManager
          e = new Enemy(this,pos,asteroidImageAnim);
          e.prio = 3;
          e.name = "Boss";
-         this.setHp(e,140,lvl);
+         this.setHp(e,150,lvl);
          this.setSpeed(e,35,lvl);
       }
       else if (type===EnemyType.IMMUNE)
@@ -425,13 +425,13 @@ class EnemyManager
 
 
       let e = new Enemy(this,this.startpositions[1], this.asteriod);
-      this.setHp(e,50,1);
+      this.setHp(e,200,1);
       this.setSpeed(e,20,1);
       e.minion = true;
       e.prio = 8;
       for (let ee=0;ee<g_enemies.length;ee++)
       {
-         if (g_enemies[ee].getName() =="SeekwerBomb" )
+         if (g_enemies[ee].getName() =="Seekwer" )
          {
             e.boss = g_enemies[ee];
             break;
@@ -446,8 +446,6 @@ class EnemyManager
       else {
             e.end = Statics.exitCells[0];
       }
-
-
 
       e.calcRoute();
       g_enemies.push(e);

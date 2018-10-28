@@ -21,7 +21,7 @@ class Game
 		if (!this.levels.length  ||  this.levels.length < this.nrOfLevels)
 		{	//dont erase at start..
 			this.levels = [];
-			this.levels = [new Level1(),new Level2(),new Level3(), new Level4(),new Level5(),new Level6(),new Level7(),new Level8(),new Level9(),new Level10(this),new Level11(),new Level12(),new Level13(),new Level14(),new Level15(),new Level16(),new Level17(),new Level18(),new Level19(),new Level20(), new Level21(),new Level22(),new Level23(this),new Level24(),new Level25(),new Level26(),new Level27(),new Level28(),new Level29(),new Level30(),new Level31(),new Level32(),new Level33(),new Level34(),new Level35(),new Level36(),new Level37(),new Level38(),new Level39(),new Level40(),new Level41(),new Level42(),new Level43(),new Level44(),new Level45(),new Level46(),new Level47(),new Level48(), new Level49(), new Level50(),new Level51(),new Level52(), new Level53(), new Level54() , new Level55(), new Level56(), new Level57(), new Level58(), new Level59()]
+			this.levels = [new Level1(),new Level2(),new Level3(), new Level4(),new Level5(),new Level6(),new Level7(),new Level8(),new Level9(),new Level10(this),new Level11(),new Level12(),new Level13(),new Level14(),new Level15(),new Level16(),new Level17(),new Level18(),new Level19(),new Level20(), new Level21(),new Level22(),new Level23(this),new Level24(),new Level25(),new Level26(),new Level27(),new Level28(),new Level29(),new Level30(),new Level31(),new Level32(),new Level33(),new Level34(),new Level35(),new Level36(),new Level37(),new Level38(),new Level39(),new Level40(),new Level41(),new Level42(),new Level43(),new Level44(),new Level45(),new Level46(),new Level47(),new Level48(), new Level49(), new Level50(),new Level51(),new Level52(), new Level53(), new Level54() , new Level55(), new Level56(), new Level57(), new Level58(), new Level59(), new Level60(), new Level61()]
 		}
 		this.nrOfLevels = this.levels.length;
 
@@ -41,7 +41,7 @@ class Game
 		this.tower1.text= "1";
 		this.tower2.text= "2";
 		this.tower3.text= "3";
-		let s = "Best towers: 1:"+this.tower1.tower_score + "...2:"+this.tower2.tower_score+"...3:"+ this.tower3.tower_score;
+		let s = "Best towers: 1:"+int(this.tower1.tower_score) + "...2:"+int(this.tower2.tower_score)+"...3:"+ int(this.tower3.tower_score);
 		g_headlines.push(s);
 		this.timer = this.time;
 
@@ -1958,8 +1958,6 @@ class Level43
 	{
 
 
-		//    let now = millis();
-
 		if ( now - this.last  >= 2000 && this.c > 0)
 		{
 
@@ -1994,20 +1992,16 @@ class Level44
 		this.level = 44;
 		this.last  = 0;
 		this.e =4;
-		this.done = false;
 
 	}
 
 	run(now)
 	{
 
-
-		//let now = millis();
-
 		if ( now - this.last  >= 1000 && this.e > 0)
 		{
 			enemyManager.createEnemies(2,EnemyType.STONE,44);
-			//this.done  =true;
+
 			this.last = now;
 			this.e--;
 		}
@@ -2024,22 +2018,15 @@ class Level45
 		this.level = 45;
 		this.last  = 0;
 		this.e =1;
-		this.done = false;
 		this.d =3;
 		this.c =4;
-		this.first = false;
+
 	}
 
 	run(now)
 	{
 
-		if (!this.first)
-		{
-			this.first = true;
-			g_headlines.push("Upcomming:...more planes....");
-		}
 
-		//    let now = millis();
 
 		if ( now - this.last  >= 2000 && this.c > 0)
 		{
@@ -2084,10 +2071,9 @@ class Level46
 		if (!this.first)
 		{
 			this.first = true;
-			g_headlines.push("Upcomming:....it will DESTROY towers..");
+			g_headlines.push("Upcomming:....it will disable a tower..");
 		}
 
-		//let now = millis();
 
 		if ( now - this.last  >= 2000 && this.e > 0)
 		{
@@ -2125,25 +2111,30 @@ class Level47
 		this.done = false;
 		this.d = 2;
 		this.g = 2;
+		this.v =1;
 	}
 
 	run(now)
 	{
 
-		//let now = millis();
 
-		if ( now - this.last  >= 2500 && this.e > 0)
+		if ( now - this.last  >= 1000 && this.e > 0)
 		{
-			enemyManager.createSeeker2(47);
-
-
+			enemyManager.createSeeker(47);
 			this.last = now;
-			this.done  =true;
-			this.x=1;
+
 			this.e--;
 		}
-
 		if (this.e==0)
+		{
+			if ( now - this.last  >= 1000 && this.v > 0)
+			{
+				enemyManager.createSeeker(47);
+				this.last = now;
+				this.v--;
+			}
+		}
+		if (this.v==0)
 		{
 			if ( now - this.last  >= 5000 && this.d > 0)
 			{
@@ -2155,9 +2146,8 @@ class Level47
 		}
 		if (this.d==0)
 		{
-			if ( now - this.last  >= 5000 && this.g > 0)
+			if ( now - this.last  >= 1000 && this.g > 0)
 			{
-
 
 				enemyManager.createMinion();
 				this.last = now;
@@ -2183,8 +2173,6 @@ class Level48
 	run(now)
 	{
 
-
-		//let now = millis();
 
 		if ( now - this.last  >= 2000 && this.c > 0)
 		{
@@ -2396,8 +2384,6 @@ class Level53
 	{
 
 
-		//    let now = millis();
-
 		if ( now - this.last  >= 2000 && this.c > 0)
 		{
 
@@ -2433,19 +2419,24 @@ class Level54
 		this.last  = 0;
 		this.e =5;
 		this.done = false;
+		this.first = false;
 
 	}
 
 	run(now)
 	{
 
+		if (!this.first)
+		{
+			this.first = true;
+			g_headlines.push("Upcomming:....planes...");
+		}
 
-		//let now = millis();
+
 
 		if ( now - this.last  >= 1000 && this.e > 0)
 		{
 			enemyManager.createEnemies(2,EnemyType.STONE,54);
-			//this.done  =true;
 			this.last = now;
 			this.e--;
 		}
@@ -2606,10 +2597,16 @@ class Level58
 		this.done = false;
 		this.d =5;
 		this.c =1;
+		this.first = false;
 	}
 
 	run(now)
 	{
+		if (!this.first)
+		{
+			this.first = true;
+			g_headlines.push("Upcomming:....4 bosses..");
+		}
 
 		if ( now - this.last  >= 2000 && this.c > 0)
 		{
@@ -2657,6 +2654,104 @@ class Level59
 			{
 
 				enemyManager.createEnemies(2,EnemyType.BOSS,59);
+				this.last = now;
+				this.d --;
+			}
+		}
+
+
+
+	}
+
+}
+
+class Level60
+{
+	constructor()
+	{
+		this.level = 60;
+		this.last  = 0;
+		this.e =1;
+		this.d =1;
+		this.c =1;
+	}
+
+	run(now)
+	{
+
+		{
+			if ( now - this.last  >= 2000 && this.e > 0)
+			{
+				enemyManager.createPlanes(4,60);
+
+				this.last = now;
+
+				this.e--;
+			}
+		}
+
+		if (this.e==0)
+		{
+			if ( now - this.last  >= 2000 && this.d > 0)
+			{1
+
+				enemyManager.createPlanes(4,60);
+				this.last = now;
+				this.d --;
+			}
+		}
+
+
+	}
+
+}
+
+
+
+class Level61
+{
+	constructor()
+	{
+		this.level = 61;
+		this.last  = 0;
+		this.e =1;
+		this.done = false;
+		this.d =2;
+		this.c =2;
+		this.first=false;
+	}
+
+	run(now)
+	{
+
+
+
+
+		if ( now - this.last  >= 1000 && this.c > 0)
+		{
+
+			enemyManager.createEnemies(2,EnemyType.GRRR,61);
+			this.last = now;
+			this.c --;
+		}
+
+		if (this.c==0)
+		{
+			if ( now - this.last  >= 2500 && this.e > 0)
+			{
+				enemyManager.createEnemies(2,EnemyType.SPIDER,61);
+
+				this.last = now;
+				this.e--;
+			}
+		}
+
+		if (this.e==0)
+		{
+			if ( now - this.last  >= 1500 && this.d > 0)
+			{
+
+				enemyManager.createEnemies(4,EnemyType.BIG,61);
 				this.last = now;
 				this.d --;
 			}

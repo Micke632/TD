@@ -39,6 +39,9 @@ removeFromArray2 = function(array,obj)
     }
 }
 
+function clamp(num, min, max) {
+  return num <= min ? min : num >= max ? max : num;
+}
 
 
 

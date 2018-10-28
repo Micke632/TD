@@ -80,7 +80,6 @@ let towerSelected  =true;
 
 var towers_removed  = 0;
 
-let recalc = false;
 
 var gameMap = null;
 var enemyManager = null;
@@ -318,6 +317,7 @@ function removeTower(i,j)
 
    if (!cell) return;
    if (!cell.tower) return;
+	cell.tower.removed();
    g_points += cell.tower.spent / 2;
    //console.log("remove tower");
    gameMap.removeTower(i,j);
@@ -397,7 +397,7 @@ function preload()
 
    t1Image = loadImage("art/t1.png");
    t2Image = loadImage("art/t2a.png");
-   t3Image = loadImage("art/t3a.png");
+   t3Image = loadImage("art/t3b.png");
    t4Image = loadImage("art/tAA.png");
    t5Image = loadImage("art/tBoost.png");
    t6Image = loadImage("art/tslow.png");
@@ -994,7 +994,7 @@ function updateSelecedTowerInfoWindow()
          return;
       }
 
-      if ( (lastCurrent != currentSelected) ||   ( frame_count % 20 == 0  ) )
+      if ( (lastCurrent != currentSelected) ||   ( frame_count % 10 == 0  ) )
       {
          //console.log("lkhdfshsdh");
          selectedTowerInfoWindow.clear();
@@ -1125,7 +1125,6 @@ function draw() {
       image(selectedTowerInfoWindow,width - SIDE ,TOP+towerInfoWindow.height+20);
 
    }
-
 
 
 

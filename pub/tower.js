@@ -65,25 +65,21 @@ class Bullet
          this.remove = true;
          return;
       }
-      let x = p5.Vector.add(this.towervector,this.vector);
-      //this.towervector.add(this.vector);
-      this.x = x.x;//this.towervector.x;
-      this.y = x.y;//this.towervector.y;
+      let v = p5.Vector.add(this.towervector,this.vector);
 
-      if (this.x > width - SIDE || this.y  > height - TOP  || this.x <0 || this.y <0)
-         this.remove = true;
-      else
-         this.doUpdate()
-   }
+      this.x = v.x;
+      this.y = v.y;
 
-   doUpdate()
-   {
+   /*   if (this.x > width - SIDE || this.y  > height - TOP  || this.x <0 || this.y <0)
+         this.remove = true;*/
+
       if ( this.moveMent > 0)
       {
-         this.x  += getRndInteger(-this.moveMent ,this.moveMent );
+         this.x += getRndInteger(-this.moveMent ,this.moveMent );
          this.y += getRndInteger(-this.moveMent ,this.moveMent );
       }
    }
+
 
    show()
    {
@@ -243,7 +239,7 @@ Tower.prototype.getLevel = function()
    return this.level;
 }
 
-//let a  =this.getPrio();
+
 Tower.prototype.fireModeDesc  =function()
 {
    let a = this.getPrio();
@@ -257,6 +253,11 @@ Tower.prototype.fireModeDesc  =function()
       fireModeS = "Closest exit";
    }
    return fireModeS;
+}
+
+Tower.prototype.removed  = function()
+{
+
 }
 
 
@@ -287,7 +288,7 @@ Tower.prototype.doGetInfo = function()
    let r = this.getRange();
    let a = this.getAimSpeed();
 
-   let print ="\nHitPoint: " + int(h) + "\nRange: "+int(r)+"\nReload: "+f/1000 + "\nAimSpeed: "+a.toFixed(2);
+   let print ="\nHitPoint: " + h.toFixed(1) + "\nRange: "+int(r)+"\nReload: "+f/1000 + "\nAimSpeed: "+a.toFixed(2);
 
    return print;
 }
@@ -311,14 +312,14 @@ Tower.prototype.getHitPoint = function()
 Tower.prototype.getAimSpeed = function()
 {
    let l = this.aimSpeed;
-   let d  =15;
+   let d  =20;
    if (l < 0.1)
    {
       d=25;
    }
 
    for (let value of this.hitBooster.values()) {
-      l+=  float( value /d );
+      l+=  float( value / d );
    }
 
   if (this.veteran)
@@ -419,10 +420,10 @@ Tower.prototype.repair = function()
    this.repairTime = this.time;
 }
 
-Tower.prototype.boost = function(by,lvl)
+Tower.prototype.boost = function(by,value)
 {
 
-   this.hitBooster.set(by,lvl);
+   this.hitBooster.set(by,value);
 
 }
 
@@ -469,7 +470,7 @@ Tower.prototype.fire = function()
          if (this.currentEnemy.remove)
          {
             this.kills+=1;
-            this.tower_score+=5;
+            this.tower_score+= this.currentEnemy.getKillScore();
 
             if ( !this.veteran && this.level >= 4 && this.kills > 60 && this.tower_score > 14000)
             {
@@ -493,7 +494,6 @@ Tower.prototype.fire = function()
 
 Tower.prototype.notify =  function(vector,from)
 {
-   //console.log("thanks");
    let dir = p5.Vector.sub(vector,this.position);
 
    dir.y *=-1;
@@ -551,33 +551,15 @@ Tower.prototype.findTarget = function()
       if (dir.mag() <= this.getRange() +10 )
       {
 
-
-
-      //   if (this.getPrio() == 0)
          {
             this.currentEnemy = e;
             return;
          }
-         //else
-         {
-            //this.pp.push(e) ;
-         }
-
 
       }
 
    }
-   //planes always highest prio
-   /*if (this.pp.length)
-   {
-      if (this.currentEnemy==null)
-      {
-         this.currentEnemy = this.pp[0];
-      }
 
-      return;
-   }
-   */
    if (this.ee.length)
    {
       if (this.getPrio() == 1)
@@ -638,14 +620,14 @@ Tower.prototype.supportSlerp  =function()
 }
 
 
-Tower.prototype.aimAt = function(e, newTarget)
+Tower.prototype.aimAt = function(e)
 {
-   let dir = p5.Vector.sub(e.vector,this.position);
 
-   let mag = dir.mag();
+   this.targetDirection = p5.Vector.sub(e.vector,this.position);
 
-   dir.y *=-1;
-   this.targetDirection = dir;
+   let mag = this.targetDirection.mag();
+
+   this.targetDirection.y *=-1;
    this.targetDirection.normalize();
 
    let angle = this.turretDirection.angleBetween(this.targetDirection);
@@ -673,13 +655,23 @@ Tower.prototype.aimAt = function(e, newTarget)
 
 Tower.prototype.slerp = function(vectorA, vectorB, t, angle)
 {
-
+/*
+    t = clamp(t, 0.001, 0.999);
 
     let v = p5.Vector.mult(vectorA,Math.sin((1 - t) * angle));
     let v2 = p5.Vector.mult(vectorB,Math.sin( t * angle));
     v.add(v2);
 
     return v.div( Math.sin(angle));
+*/
+
+    {
+       let v = p5.Vector.sub(vectorB,vectorA);
+       v.mult(t);
+       v.add(vectorA);
+       return v;
+      //return (vectorA + 10*(vectorB - vectorA));
+    }
 
 }
 
@@ -753,9 +745,8 @@ Tower.prototype.update = function(timed)
 
    if (this.disabled) return;
 
-   let noEnemy = this.currentEnemy?false:true ;
 
-   if ( noEnemy ||  this.getPrio()!=0  )
+   if ( !this.currentEnemy ||  this.getPrio()!=0  )
    {
       this.findTarget();
    }
@@ -772,7 +763,7 @@ Tower.prototype.update = function(timed)
    {
       this.notifyVector=null;
 
-      let r = this.aimAt(this.currentEnemy, noEnemy);
+      let r = this.aimAt(this.currentEnemy);
 
       if ( this.currentEnemy.remove  || r > (this.getRange()+10) )
       {
@@ -789,7 +780,6 @@ Tower.prototype.update = function(timed)
    }
    else if (this.notifyVector!=null)
    {
-         //console.log("aiming");
       this.aimAtFromNotify(this.notifyVector);
 
       if (this.time - this.notifyTime > 2000)
@@ -797,9 +787,14 @@ Tower.prototype.update = function(timed)
          this.notifyVector = null;
          this.from = null;
       }
-
-
   }
+
+  this.doUpdate();
+
+}
+
+Tower.prototype.doUpdate = function()
+{
 
 }
 
@@ -961,7 +956,12 @@ function Tower2(i,j,img)
    this.range= Statics.getDefaultRange()+5;
    this.type  = 1;
    this.aimSpeed = 0.25;
+   this.neighbors = [];
+   this.spent =this.cost;
+   this.addNeighbors();
+
 }
+
 
 
 Tower2.prototype = Object.create(Tower.prototype);
@@ -971,6 +971,52 @@ Tower2.prototype.canChangeFireMode  =function()
 {
    return true;
 }
+
+
+Tower2.prototype.doUpdate = function()
+{
+   if (this.count % 20 != 0) return;
+
+   for (let i=0;i<this.neighbors.length;i++)
+   {
+      //console.log("boosting");
+      this.neighbors[i].boost(this,0.1*this.level);
+
+   }
+}
+
+
+Tower2.prototype.removed  = function()
+{
+   for (let i=0;i<this.neighbors.length;i++)
+   {
+      removeFromArray2(this.neighbors[i].neighbors,this);
+   }
+
+}
+
+
+Tower2.prototype.addNeighbors = function()
+{
+   let c1 = gameMap.getCell(this.i-1,this.j);
+   let c2 = gameMap.getCell(this.i,this.j-1);
+   let c3 = gameMap.getCell(this.i+2,this.j);
+   let c4 = gameMap.getCell(this.i,this.j+2);
+   this.addNeighbor(c1);
+   this.addNeighbor(c2);
+   this.addNeighbor(c3);
+   this.addNeighbor(c4);
+}
+
+Tower2.prototype.addNeighbor = function(cell)
+{
+   if ( cell && cell.tower && cell.tower.type==1)
+   {
+      this.neighbors.push(cell.tower);
+      cell.tower.neighbors.push(this);
+   }
+}
+
 
 Tower2.prototype.doUpgrade = function()
 {
@@ -987,13 +1033,11 @@ Tower2.prototype.doUpgrade = function()
       this.hit+=5;
       this.range += 15;
       this.aimSpeed+=0.05;
-      //this.upgradeCost=0;
-      //this.fireSpeed -=100;
    }
    else if (this.level === 2)
    {
       this.hit+=3;
-      this.upgradeCost += 100;
+      this.upgradeCost += 120;
       this.range+=12;
    }
 
@@ -1005,25 +1049,19 @@ Tower2.prototype.doUpgrade = function()
 
 Tower2.prototype.notifyNeighborTower= function()
 {
-   //console.log("notifyNeighborTower");
-   let c1 = gameMap.getCell(this.i-1,this.j);
-   let c2 = gameMap.getCell(this.i,this.j-1);
-   let c3 = gameMap.getCell(this.i+2,this.j);
-   let c4 = gameMap.getCell(this.i,this.j+2);
-   this.notifyTower(c1);
-   this.notifyTower(c2);
-   this.notifyTower(c3);
-   this.notifyTower(c4);
-}
-
-Tower2.prototype.notifyTower = function(cell)
-{
-   if ( (cell && cell.tower) && (cell.tower != this.from)  && (cell.tower.type==1)  && !cell.tower.notifyVector)
+   for (let i=0;i<this.neighbors.length;i++)
    {
-      cell.tower.notify(this.currentEnemy.vector.copy(),this);
-   }
+      //console.log("boosting");
+      let t = this.neighbors[i];
+      if ( t!= this.from && !t.notifyVector)
+      {
+         t.notify(this.currentEnemy.vector.copy(),this);
+      }
 
+
+   }
 }
+
 
 Tower2.prototype.doGetInfo = function()
 {
@@ -1032,7 +1070,7 @@ Tower2.prototype.doGetInfo = function()
    let r = this.getRange();
    let a = this.getAimSpeed();
 
-   let print ="\nHitPoint: " + int(h) + "\nRange: "+int(r)+"\nReload: "+f/1000 + "\nAimSpeed: "+a.toFixed(2);
+   let print ="\nHitPoint: " + h.toFixed(1) + "\nRange: "+int(r)+"\nReload: "+f/1000 + "\nAimSpeed: "+a.toFixed(2);
 
    let s = this.fireModeDesc();
 
@@ -1041,21 +1079,6 @@ Tower2.prototype.doGetInfo = function()
 }
 
 
-
-/* Tower2.prototype.doShow = function()
-{
-//draw aim
-let x = getX(this.i);
-let y = getY(this.j);
-let xx = x+CELL_WIDTH;
-let yy = y+CELL_HEIGHT;
-stroke(0);
-strokeWeight(2);
-line(xx,yy,xx + this.aim.x*this.aimLength,yy-this.aim.y*this.aimLength);
-noStroke();
-strokeWeight(1);
-}
-*/
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1074,6 +1097,7 @@ function TowerSniper(i,j,img)
    this.findTargetRate=5;
    this.type  = 6;
    this.prio = 1;
+   this.spent =this.cost;
    this.aimSpeed = 0.05;
 }
 
@@ -1094,7 +1118,7 @@ TowerSniper.prototype.doGetInfo = function()
    let r = this.getRange();
    let a = this.getAimSpeed();
 
-   let print ="\nHitPoint: " + int(h) + "\nRange: "+int(r)+"\nReload: "+f/1000 + "\nAimSpeed: "+a.toFixed(2);
+   let print ="\nHitPoint: " + h.toFixed(1)+ "\nRange: "+int(r)+"\nReload: "+f/1000 + "\nAimSpeed: "+a.toFixed(2);
 
    let s = this.fireModeDesc();
 
@@ -1152,7 +1176,7 @@ function Tower3(i,j,img)
    this.cost = 100;
    this.upgradeCost = 100;
    this.fireSpeed = 1500;
-
+   this.spent =this.cost;
    this.stunChance = 5;
    this.findTargetRate=3;
    this.type  = 3 ;
@@ -1214,14 +1238,19 @@ Tower3.prototype.findTarget = function()
    }
 }
 
+Tower3.prototype.doShow = function()
+{
+
+}
+
 Tower3.prototype.addHeat = function()
 {
 
    bulletHandler.create(this.position.x,this.position.y,this.turretDirection ,this.getRange(),color(240,0,0,222),4,2 ,50);
    let v = this.turretDirection.copy();
-   for (let i=0;i<15;i++)
+   for (let i=0;i<20;i++)
    {
-      v.rotate(0.10);
+      v.rotate(0.30);
       bulletHandler.create(this.position.x,this.position.y,v,this.getRange(),color(240,0,0,222),4,2 ,50);
    }
 
@@ -1255,7 +1284,7 @@ Tower3.prototype.fire = function()
          if (this.myenemies[i].remove)
          {
             this.kills+=1;
-            this.tower_score+=5
+            this.tower_score+=this.myenemies[i].getKillScore();
 
             if ( !this.veteran &&  this.level >= 4  && this.kills > 60 && this.tower_score > 14000)
             {
@@ -1302,22 +1331,21 @@ Tower3.prototype.doUpgrade = function()
    if (this.level === 4)
    {
       this.hit+=3;
-      //this.upgradeCost=0;
-      this.fireSpeed-=300;
    }
    else if (this.level === 3)
    {
       this.hit+=1;
       this.upgradeCost += 200;
-      this.fireSpeed-=100;
+
    }
    else
    {
       this.hit+=1;
       this.upgradeCost += 100;
-      this.fireSpeed-=100;
+
    }
 
+   this.fireSpeed-=100;
    this.stunChance -=1;
 
 
@@ -1341,6 +1369,7 @@ function TowerSlow(i,j,img)
    this.findTargetRate=3;
    this.enem = [];
    this.type  = 5;
+   this.spent =this.cost;
 
 }
 
@@ -1474,6 +1503,7 @@ TowerSlow.prototype.getHitPoint = function()
    return l;
 }
 
+
 TowerSlow.prototype.doShow = function()
 {
 
@@ -1546,6 +1576,7 @@ function Tower4(i,j,img)
    this.upgradeCost = 100;
    this.count = 0;
    this.type  = 4 ;
+   this.spent =this.cost;
 }
 
 
@@ -1645,6 +1676,7 @@ function TowerAA(i,j,img)
    this.findTargetRate=3;
    this.type  = 2 ;
    this.aimSpeed = 0.5;
+   this.spent =this.cost;
 
 }
 
@@ -1776,7 +1808,11 @@ class TowerTool
       }
       if (n == "RangerTower")
       {
-         print += "\nUpgrades good.\nBig damage\ndealer";
+         print += "\nBig damage\ndealer.Upgrades good";
+         print += "\nClose RangerTowers\n";
+         print += "increase stats";
+
+
       }
       if (n == "BoostTower")
       {

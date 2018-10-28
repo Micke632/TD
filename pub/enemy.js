@@ -178,6 +178,13 @@ class Enemy
       return true;
    }
 
+   getKillScore()
+   {
+      if (this.prio==10) return 1;
+      if (this.prio>6) return 5;
+      return 10;
+   }
+
    damage(z)
    {
       if (this.remove) return false;
@@ -254,7 +261,6 @@ class Enemy
 
       if (!this.pathHelper.calcRoute(this.cell, this.end, this.normalExits))
       {
-         //console.log("calcRoute")
          return false;
       }
 
@@ -307,7 +313,6 @@ class Enemy
                if (this.closeTo(g_enemies[i]))
                {
 
-                  //this.simple=false;
                   this.speed = g_enemies[i].speed;
                   if (this.speed > 2){
                      this.speed-=2;
@@ -334,7 +339,6 @@ class Enemy
          if (this.boss.remove || !this.closeTo(this.boss))
          {
             this.boss = null;
-            // this.simple = true;
             this.speed = getRndInteger(30,45);
             //this.calcRoute( );
          }
@@ -535,7 +539,6 @@ class Enemy
 
    slowDown(d,t,p)
    {
-      //if (this.friction.length>1) return;
       this.friction.push( { dist:d, time:this.time ,s:t, who:p } );
 
    }
@@ -657,14 +660,13 @@ class Enemy2 extends Enemy
 
    doOnDead()
    {
-      //popp.play();
 
       beepSound.play();
       let m = getRndInteger(4,8);
       for (let i=0;i<m;i++)
       {
          let e = new Enemy(this.manager,this.getPos(),this.images2);
-         // e.simple = true;
+
          e.minion = true;
          e.immune = true;
 
@@ -718,10 +720,10 @@ class Enemy2A extends Enemy2
 
 
          e.end=this.end;
-
+         e.speed = this.speed-5;
          e.calcRoute();
 
-         e.speed = this.speed-10;
+
          g_enemies.push(e);
       }
       else
@@ -1148,6 +1150,17 @@ class EnemyPlane
    {
       return this.friction.length > 0;
    }
+
+   f()
+   {
+      return 10;
+   }
+
+   getKillScore()
+   {
+      return 10;
+   }
+
 
 
    slowDown(d,t,p)
