@@ -644,6 +644,8 @@ Tower.prototype.aimAt = function(e)
       this.turretDirection = this.slerp(this.turretDirection,this.targetDirection,this.getAimSpeed(), angle);
       this.turretDirection.normalize();
 
+	  
+
    }
 
 
@@ -916,18 +918,19 @@ Tower.prototype.show = function()
 
 
    }
-
-   this.doShow();
-}
-
-Tower.prototype.doShow = function()
-{
    if (this.text)
    {
       textSize(CELL_WIDTH*2);
       fill(color('white'));
       text(this.text,this.x+CELL_WIDTH- 5,this.y+CELL_HEIGHT+10);
    }
+   
+   this.doShow();
+}
+
+Tower.prototype.doShow = function()
+{
+  
 
 
    let xx = this.x+CELL_WIDTH;
@@ -1512,10 +1515,7 @@ TowerSlow.prototype.doShow = function()
 
 TowerSlow.prototype.fire = function()
 {
-   //this.findTarget();
-   {
-
-      if (this.currentEnemy && !this.disabled)
+         
       {
          if (this.selected)
             swoshSound.play();
@@ -1541,7 +1541,7 @@ TowerSlow.prototype.fire = function()
          bulletHandler.create(this.position.x,this.position.y,v,this.getRange(),color(0,0,240,222),3,2 ,60);
       }
       this.currentEnemy = null;
-   }
+   
 
 }
 
