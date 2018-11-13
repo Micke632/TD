@@ -1,3 +1,4 @@
+
 var EnemyType =
 {
    VANILLA : 0,
