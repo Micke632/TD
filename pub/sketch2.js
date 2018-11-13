@@ -88,6 +88,7 @@ let game = null;
 let cnv;
 
 var currentLevel = 1;
+var renderSystem =null;
 
 var gameStateEnum =
 {
@@ -175,6 +176,9 @@ class Statics
    }
 
 }
+
+
+
 
 function compareTowers(a,b)
 {
@@ -526,6 +530,7 @@ function setup() {
 
    Statics.setMaxMovement( min(CELL_WIDTH,CELL_HEIGHT) -4 )
 
+	renderSystem = new RenderSystem();
 
    enemyManager = new EnemyManager();
 
@@ -874,16 +879,16 @@ function mouseReleasedInGrid()
 
 function keyPressed() {
    if(keyCode == LEFT_ARROW) {
-      enemyManager.createSeeker2(10);
+      enemyManager.createSeeker(10);
    }
    else if(keyCode == RIGHT_ARROW) {
-      enemyManager.createEnemies(1,EnemyType.KAKA,14);;
+      enemyManager.createEnemies(1,EnemyType.POISON,15);
    }
    else if(keyCode == DOWN_ARROW) {
       enemyManager.createPlanes(2,10);
    }
    else if(keyCode == UP_ARROW) {
-      enemyManager.createEnemies(5,EnemyType.VANILLA,50);
+      enemyManager.createEnemies(1,EnemyType.VANILLA,5);
    }
    else if((keyCode == 46) || (keyCode==83)){
 
@@ -1148,16 +1153,17 @@ function draw() {
       for (let i=0;i<g_enemies.length;i++)
       {
          g_enemies[i].update(delta);
-         g_enemies[i].show();
+      //   g_enemies[i].show();
       }
 
 
       for (let i=0;i<g_planes.length;i++)
       {
          g_planes[i].update(delta);
-         g_planes[i].show();
+         //g_planes[i].show();
       }
 
+		renderSystem.draw();
 
       bulletHandler.updateAndShow(delta);
 

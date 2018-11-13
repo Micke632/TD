@@ -462,15 +462,18 @@ Tower.prototype.fire = function()
 {
 
    {
-
+      let d = this.currentEnemy.get(messagesEnum.hp);
       let h = this.getHitPoint();
-      if (this.currentEnemy.damage(h )){
+      this.currentEnemy.send(messagesEnum.damage,h);
+      let d2 = this.currentEnemy.get(messagesEnum.hp);
+      if (d2<d)
+      {
          this.tower_score+=h;
 
-         if (this.currentEnemy.remove)
+         if (d2<=0)
          {
             this.kills+=1;
-            this.tower_score+= this.currentEnemy.getKillScore();
+            this.tower_score+=5;// this.currentEnemy.getKillScore();
 
             if ( !this.veteran && this.level >= 4 && this.kills > 60 && this.tower_score > 14000)
             {
@@ -643,8 +646,6 @@ Tower.prototype.aimAt = function(e)
    else {
       this.turretDirection = this.slerp(this.turretDirection,this.targetDirection,this.getAimSpeed(), angle);
       this.turretDirection.normalize();
-
-	  
 
    }
 
@@ -918,19 +919,18 @@ Tower.prototype.show = function()
 
 
    }
+
+   this.doShow();
+}
+
+Tower.prototype.doShow = function()
+{
    if (this.text)
    {
       textSize(CELL_WIDTH*2);
       fill(color('white'));
       text(this.text,this.x+CELL_WIDTH- 5,this.y+CELL_HEIGHT+10);
    }
-   
-   this.doShow();
-}
-
-Tower.prototype.doShow = function()
-{
-  
 
 
    let xx = this.x+CELL_WIDTH;
@@ -1281,13 +1281,16 @@ Tower3.prototype.fire = function()
 
    for (let i=0;i<this.myenemies.length;i++)
    {
-
-      if (this.myenemies[i].damage(h ))
+      let d = this.currentEnemy.get(messagesEnum.hp);
+      this.myenemies[i].send(messagesEnum.damage,h);
+      let d2 = this.currentEnemy.get(messagesEnum.hp);
+      if (d2<d)
+      //if (this.myenemies[i].damage(h ))
       {
-         if (this.myenemies[i].remove)
+         if (d2<=0)
          {
             this.kills+=1;
-            this.tower_score+=this.myenemies[i].getKillScore();
+            this.tower_score+=5;//this.myenemies[i].getKillScore();
 
             if ( !this.veteran &&  this.level >= 4  && this.kills > 60 && this.tower_score > 14000)
             {
@@ -1300,7 +1303,10 @@ Tower3.prototype.fire = function()
          {
             if (this.selected)
                swoshSound.play();
-            this.myenemies[i].slowDown(this.getSlowDown(),1200,this);
+            //this.myenemies[i].slowDown(this.getSlowDown(),1200,this);
+             let o = { dist:this.getSlowDown(), time:this.time ,s:1200, who:this};
+
+            this.myenemies[i].send(messagesEnum.friction, o );
 
             this.tower_score+=h/2;
 
@@ -1374,6 +1380,8 @@ function TowerSlow(i,j,img)
    this.type  = 5;
    this.spent =this.cost;
 
+   this.mySlowed = [];
+
 }
 
 
@@ -1405,18 +1413,50 @@ TowerSlow.prototype.canFire = function()
    return true;
 }
 
+TowerSlow.prototype.includesInSlow = function(e)
+{
+   for (let i=0;i<this.mySlowed.length;i++)
+   {
+      if (this.mySlowed[i].e == e) return true;
+   }
+
+   return false;
+}
+
+TowerSlow.prototype.addInSlow = function(e)
+{
+   if (this.includesInSlow(e)) return;
+
+   this.mySlowed.push({e:e,t:this.time});
+
+   return false;
+}
+
+
+TowerSlow.prototype.removeInSlow =function()
+{
+   for (let i=0;i<this.mySlowed.length;i++)
+   {
+      if (this.time -  this.mySlowed[i].t > 3000)
+      {
+         removeFromArray2(this.mySlowed,this.mySlowed[i]);
+         return;
+      }
+   }
+}
+
 TowerSlow.prototype.findTarget = function()
 {
 
    this.enem.length  =0;
-
+   this.removeInSlow();
 
    for (let i=0;i<g_enemies.length;i++)
    {
       let e = g_enemies[i];
       if (e.remove) continue;
-      if (!e.canBeSlowed()) continue;
-      if (e.isInFriction(this))
+      //if (!e.canBeSlowed()) continue;
+      if (this.includesInSlow(e))
       {
          //If this tower is already adding friction, find a new enemy
          if (e==this.currentEnemy)
@@ -1448,7 +1488,8 @@ TowerSlow.prototype.findTarget = function()
    {
       let e = g_planes[i];
       if (e.remove) continue;
-      if (e.isInFriction(this))
+      //if (e.isInFriction(this))
+      if (this.includesInSlow(e))
       {
 
          if (e==this.currentEnemy)
@@ -1468,21 +1509,30 @@ TowerSlow.prototype.findTarget = function()
 
          this.enem.push(e);
 
-
       }
 
    }
+
+
 
    if (this.enem.length>1)
    {
       for (let i=0;i<this.enem.length;i++)
       {
-         if (!this.enem[i].slowed())
+         if (!this.enem[i].get(messagesEnum.friction))
          {
             this.currentEnemy = this.enem[i];
+            //this.mySlowed.push({e:this.currentEnemy,t:this.time});
+            this.addInSlow(this.currentEnemy);
+
             return;
          }
       }
+
+   }
+   else if (this.enem.length==1)
+   {
+      this.addInSlow(this.currentEnemy);
 
    }
 
@@ -1515,13 +1565,19 @@ TowerSlow.prototype.doShow = function()
 
 TowerSlow.prototype.fire = function()
 {
-         
+   //this.findTarget();
+   {
+
+   //   if (this.currentEnemy && !this.disabled)
       {
          if (this.selected)
             swoshSound.play();
 
          let h = this.getHitPoint();
-         this.currentEnemy.slowDown(h,3000,this);
+         //this.currentEnemy.slowDown(h,3000,this);
+         let o = { dist:h, time:this.time ,s:3000, who:this};
+         this.currentEnemy.send(messagesEnum.friction, o );
+
 
          this.tower_score+=h/2;
 
@@ -1541,7 +1597,7 @@ TowerSlow.prototype.fire = function()
          bulletHandler.create(this.position.x,this.position.y,v,this.getRange(),color(0,0,240,222),3,2 ,60);
       }
       this.currentEnemy = null;
-   
+   }
 
 }
 

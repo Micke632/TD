@@ -2144,16 +2144,7 @@ class Level47
 				this.d --;
 			}
 		}
-		if (this.d==0)
-		{
-			if ( now - this.last  >= 1000 && this.g > 0)
-			{
-
-				enemyManager.createMinion();
-				this.last = now;
-				this.g --;
-			}
-		}
+	
 
 	}
 
