@@ -583,8 +583,10 @@ Tower.prototype.findTarget = function()
          //closest to exit
 
          this.ee.sort(function(a,b) {
+            let l1 = a.enem.get(messagesEnum.pathlength);
+            let l2 = b.enem.get(messagesEnum.pathlength);
 
-            let x =  a.enem.getPathLength() - b.enem.getPathLength() ;
+            let x = l1 - l2;
             return x;
          });
 
@@ -1304,7 +1306,7 @@ Tower3.prototype.fire = function()
             if (this.selected)
                swoshSound.play();
             //this.myenemies[i].slowDown(this.getSlowDown(),1200,this);
-             let o = { dist:this.getSlowDown(), time:this.time ,s:1200, who:this};
+             let o = { dist:this.getSlowDown() ,s:1200, who:this};
 
             this.myenemies[i].send(messagesEnum.friction, o );
 
@@ -1575,7 +1577,7 @@ TowerSlow.prototype.fire = function()
 
          let h = this.getHitPoint();
          //this.currentEnemy.slowDown(h,3000,this);
-         let o = { dist:h, time:this.time ,s:3000, who:this};
+         let o = { dist:h,s:3000, who:this};
          this.currentEnemy.send(messagesEnum.friction, o );
 
 

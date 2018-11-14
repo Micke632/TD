@@ -91,13 +91,11 @@ class Component{
 
    init() {}
 
-   init2() {}
-
    doOnDead() {}
 
    update(delta) {}
 
-   getType()  { }
+
 
 
    doOnReachEnd()
@@ -207,6 +205,8 @@ class EnemyGraphicComponent extends Component
       this.armorimages = null;
       this.w = this.images[0].width;
 
+      this.r = new RenderImage(this.images[0],0,0,this.transformComponent);
+      this.rhp = new RenderHp(0,0,this.w,0);
    }
 
    update(delta)
@@ -218,8 +218,11 @@ class EnemyGraphicComponent extends Component
          renderSystem.addRender(new RenderImage(this.armorimages[0],this.parent.vector.x,this.parent.vector.y,this.transformComponent));
       }
       else {
+         this.r.image = this.images[this.animateCounter];
+         this.r.x = this.parent.vector.x;
+         this.r.y = this.parent.vector.y;
 
-         renderSystem.addRender(new RenderImage(this.images[this.animateCounter],this.parent.vector.x,this.parent.vector.y,this.transformComponent));
+         renderSystem.addRender(this.r);
          this.animateCounter++;
          if (this.animateCounter == this.images.length)
          {
@@ -232,13 +235,82 @@ class EnemyGraphicComponent extends Component
 
       if (l>0)
       {
-
-         renderSystem.addRender( new RenderHp(this.parent.vector.x,this.parent.vector.y,this.w,l));
+         this.rhp.x = this.parent.vector.x;
+         this.rhp.y = this.parent.vector.y;
+         this.rhp.l= l;
+         renderSystem.addRender(this.rhp);
 
       }
    }
 
 }
+
+
+class Friction
+{
+   constructor()
+   {
+      this.friction = [];
+   }
+
+   has()
+   {
+      return this.friction.length > 0;
+   }
+
+
+   addFriction(o,time)
+   {
+
+      for (let i=0;i<this.friction.length;i++)
+      {
+         if (this.friction[i].who==o.who) return;
+      }
+
+      let f = {dist:o.dist,s:o.s,time:time,who:o.who};
+
+      this.friction.push(f);
+
+   }
+
+
+   handleFriction(distance,direction,time)
+   {
+      let vector = null;
+      if (this.friction.length>0)
+      {
+         let x = p5.Vector.mult(direction,-1);
+
+         for (let i=0;i<this.friction.length;i++)
+         {
+            let b = distance * (this.friction[i].dist/100);
+
+            let dd = p5.Vector.mult(x,b);
+            distance-=b;
+            if (distance>0)
+            {
+               vector = dd;
+            }
+
+         }
+
+         for (let i=0;i<this.friction.length;i++)
+         {
+
+            if ( time - this.friction[i].time > this.friction[i].s)
+            {
+               removeFromArray2(this.friction,this.friction[i]);
+               break;
+            }
+         }
+
+      }
+      return vector;
+
+   }
+
+}
+
 
 class MoveableComponent extends Component
 {
@@ -248,44 +320,274 @@ class MoveableComponent extends Component
       super();
 
       this.pathHelper = new PathHelper(new MazeWalker(Statics.exitCells),
-                                 w,
-                                 h,
-                                 CELL_WIDTH,
-                                 CELL_HEIGHT,
-                                 function(){
-                                    gameMap.resetPathInfo();
-                                 },
-                                 Statics.getMaxMovement()
-                                 );
+      w,
+      h,
+      CELL_WIDTH,
+      CELL_HEIGHT,
+      function(){
+         gameMap.resetPathInfo();
+      },
+      Statics.getMaxMovement()
+   );
 
-      this.friction = [];
-      this.immune  =false;
+   this.friction = new Friction();
+   this.immune  =false;
+}
+
+
+init()
+{
+   this.parent.register(this,messagesEnum.friction);
+   this.parent.register(this,messagesEnum.route);
+   this.parent.registerGetter(this,messagesEnum.friction);
+   this.parent.registerGetter(this,messagesEnum.pathlength);
+   this.parent.register(this,messagesEnum.setRoute);
+
+
+   this.calcRoute(true);
+}
+
+
+
+receive(m,v)
+{
+   if (m == messagesEnum.friction)
+   {
+      this.addFriction(v);
+   }
+   else if (m == messagesEnum.route)
+   {
+      this.calcRoute(true);
+   }
+   else if (m == messagesEnum.setRoute)
+   {
+      this.pathHelper.setRoutePath(v);
    }
 
+}
+
+get(m)
+{
+   if (m == messagesEnum.friction)
+   {
+      return this.IsSlowed();
+   }
+   else if (m == messagesEnum.pathlength)
+   {
+      return this.pathHelper.getPathLength();
+   }
+
+   return null;
+}
+
+
+calcRoute(exits)
+{
+
+   if (!this.pathHelper.calcRoute(this.parent.cell, this.parent.end, exits))
+   {
+      return false;
+   }
+
+   this.makeDirectionFrom(this.pathHelper.getDirection());
+
+   return true;
+
+}
+
+
+makeDirectionFrom(d)
+{
+
+   if (d == 0)
+   {
+      this.parent.direction =Statics.getRight();
+   }
+   else if (d == 1)
+   {
+      this.parent.direction = Statics.getLeft()
+   }
+   else if (d == 2)
+   {
+      this.parent.direction = Statics.getDown()
+   }
+   else
+   {
+      this.parent.direction =  Statics.getUp()
+   }
+
+}
+
+
+
+
+update(delta)
+{
+
+   let maxDistance = this.pathHelper.getMaxDistance();
+
+   let dist = delta/1000.0 * this.parent.speed;
+   let distance= min(dist,maxDistance);
+
+   let vector = p5.Vector.mult(this.parent.direction,distance);
+
+   this.parent.vector.add(vector);
+
+
+   let v = this.friction.handleFriction(distance,this.parent.direction,this.parent.time);
+   if (v)
+      this.parent.vector.add(v);
+
+   this.parent.cell  = this.parent.getCellAtMe();
+
+
+   let result = this.pathHelper.checkPath(this.parent.cell,this.parent.vector.x,this.parent.vector.y);
+
+   if (result == PathResultEnum.ENUM_NEW_CELL)
+   {
+      this.makeDirectionFrom(this.pathHelper.getDirection());
+   }
+   else if (result == PathResultEnum.ENUM_REACH_DEST)
+   {
+      //console.log("dest");
+      //some have towers as destination
+      if (!Statics.exitCells.includes(this.parent.cell))
+      {
+         this.parent.doOnReachEnd();
+      }
+      else
+      {
+         applauseSound.play();
+         this.parent.remove = true;
+         g_enemies_escaped += 1;
+         return;
+      }
+
+   }
+   else if (result == PathResultEnum.ENUM_STUCK)
+   {
+      //return;
+   }
+   else if (result == PathResultEnum.ENUM_LOST)
+   {
+      let c = this.findCellAround(this.parent.cell);
+      if (!c)
+      {
+         console.error("error!,outside area");
+         //remove him atleast
+         this.parent.remove = true;
+         return;
+      }
+      //move to cell
+      this.parent.vector.x = c.x;
+      this.parent.vector.y = c.y;
+      this.parent.cell = this.parent.getCellAtMe();
+      this.calcRoute(true);
+
+   }
+
+}
+
+findCell(cell,dir)
+{
+   if (!cell ) return null;
+
+   if (dir == Statics.getRight())
+   {   //try move left
+      let c = gameMap.getCell(cell.i - 1, cell.j);
+      if (canWalk(c)) return c;
+      if (c && c.hidden)
+      {
+         return this.findCell(cell,Statics.getDown());
+      }
+      return this.findCell(c,dir);
+   }
+   else if (dir == Statics.getLeft())
+   {
+      let c = gameMap.getCell(cell.i +1, cell.j);
+      if (canWalk(c)) return c;
+      if (c && c.hidden)
+      {
+         return this.findCell(cell,Statics.getDown());
+      }
+
+      return this.findCell(c,dir);
+   }
+   else if (dir == Statics.getDown())
+   {
+      let c = gameMap.getCell(cell.i , cell.j -1);
+      if (canWalk(c)) return c;
+      if (c && c.hidden)
+      {
+         return this.findCell(cell,Statics.getRight());
+      }
+
+      return this.findCell(c,dir);
+   }
+   else
+   {
+      let c = gameMap.getCell(cell.i , cell.j +1);
+      if (canWalk(c)) return c;
+      if (c && c.hidden)
+      {
+         return this.findCell(cell,Statics.getRight());
+      }
+      return this.findCell(c,dir);
+   }
+}
+
+findCellAround(cell)
+{
+   if (!cell ) return null;
+
+   return this.findCell(cell,this.direction);
+
+}
+
+
+IsSlowed()
+{
+   return this.friction.has();
+}
+
+
+addFriction(o)
+{
+   if (!this.immune)
+
+   this.friction.addFriction(o,this.parent.time);
+
+
+}
+
+
+
+}
+
+
+class FlyingComponent extends Component
+{
+
+   constructor()
+   {
+      super();
+
+      this.friction = new Friction();
+
+
+   }
 
    init()
    {
-         this.parent.register(this,messagesEnum.friction);
-         this.parent.register(this,messagesEnum.route);
-
-         this.calcRoute(true);
+      this.parent.register(this,messagesEnum.friction);
    }
 
-
-   getType()
-   {
-      return componentEnum.movement;
-   }
 
    receive(m,v)
    {
       if (m == messagesEnum.friction)
       {
          this.addFriction(v);
-      }
-      else if (m == messagesEnum.route)
-      {
-         return this.calcRoute(true);
       }
 
    }
@@ -301,260 +603,21 @@ class MoveableComponent extends Component
    }
 
 
-   calcRoute(exits)
-   {
-
-      if (!this.pathHelper.calcRoute(this.parent.cell, this.parent.end, exits))
-      {
-         return false;
-      }
-
-      this.makeDirectionFrom(this.pathHelper.getDirection());
-
-      return true;
-
-   }
-
-
-   makeDirectionFrom(d)
-   {
-
-         if (d == 0)
-         {
-            this.parent.direction =Statics.getRight();
-         }
-         else if (d == 1)
-         {
-            this.parent.direction = Statics.getLeft()
-         }
-         else if (d == 2)
-         {
-            this.parent.direction = Statics.getDown()
-         }
-         else
-         {
-            this.parent.direction =  Statics.getUp()
-         }
-
-   }
-
-
-
-
-   update(delta)
-   {
-
-      let maxDistance = this.pathHelper.getMaxDistance();
-
-      let dist = delta/1000.0 * this.parent.speed;
-      let distance= min(dist,maxDistance);
-
-      let vector = p5.Vector.mult(this.parent.direction,distance);
-
-      this.parent.vector.add(vector);
-
-
-      this.handleFriction(distance);
-
-      this.parent.cell  = this.parent.getCellAtMe();
-
-
-      let result = this.pathHelper.checkPath(this.parent.cell,this.parent.vector.x,this.parent.vector.y);
-
-      if (result == PathResultEnum.ENUM_NEW_CELL)
-      {
-         this.makeDirectionFrom(this.pathHelper.getDirection());
-      }
-      else if (result == PathResultEnum.ENUM_REACH_DEST)
-      {
-         //console.log("dest");
-         //some have towers as destination
-         if (!Statics.exitCells.includes(this.parent.cell))
-         {
-            this.parent.doOnReachEnd();
-         }
-         else
-         {
-            applauseSound.play();
-            this.parent.remove = true;
-            g_enemies_escaped += 1;
-            return;
-         }
-
-      }
-      else if (result == PathResultEnum.ENUM_STUCK)
-      {
-         //return;
-      }
-      else if (result == PathResultEnum.ENUM_LOST)
-      {
-         let c = this.findCellAround(this.parent.cell);
-         if (!c)
-         {
-            console.error("error!,outside area");
-            //remove him atleast
-            this.parent.remove = true;
-            return;
-         }
-         //move to cell
-         this.parent.vector.x = c.x;
-         this.parent.vector.y = c.y;
-         this.parent.cell = this.parent.getCellAtMe();
-         this.calcRoute(true);
-
-         //return;
-      }
-
-
-
-
-   }
-
-   findCell(cell,dir)
-   {
-      if (!cell ) return null;
-
-      if (dir == Statics.getRight())
-      {   //try move left
-         let c = gameMap.getCell(cell.i - 1, cell.j);
-         if (canWalk(c)) return c;
-         if (c && c.hidden)
-         {
-            return this.findCell(cell,Statics.getDown());
-         }
-         return this.findCell(c,dir);
-      }
-      else if (dir == Statics.getLeft())
-      {
-         let c = gameMap.getCell(cell.i +1, cell.j);
-         if (canWalk(c)) return c;
-         if (c && c.hidden)
-         {
-            return this.findCell(cell,Statics.getDown());
-         }
-
-         return this.findCell(c,dir);
-      }
-      else if (dir == Statics.getDown())
-      {
-         let c = gameMap.getCell(cell.i , cell.j -1);
-         if (canWalk(c)) return c;
-         if (c && c.hidden)
-         {
-            return this.findCell(cell,Statics.getRight());
-         }
-
-         return this.findCell(c,dir);
-      }
-      else
-      {
-         let c = gameMap.getCell(cell.i , cell.j +1);
-         if (canWalk(c)) return c;
-         if (c && c.hidden)
-         {
-            return this.findCell(cell,Statics.getRight());
-         }
-         return this.findCell(c,dir);
-      }
-   }
-
-   findCellAround(cell)
-   {
-      if (!cell ) return null;
-
-      return this.findCell(cell,this.direction);
-
-   }
-
-
-   IsSlowed()
-   {
-      return this.friction.length > 0;
-   }
-
-
-   addFriction(o)
-   {
-      //console.log("slow");
-      if (!this.immune)
-         this.friction.push(o);
-
-   }
-
-
-
-   handleFriction(distance)
-   {
-            if (this.friction.length>0)
-            {
-               let x = p5.Vector.mult(this.parent.direction,-1);
-
-               for (let i=0;i<this.friction.length;i++)
-               {
-                  let b = distance * (this.friction[i].dist/100);
-
-                  let dd = p5.Vector.mult(x,b);
-                  distance-=b;
-                  if (distance>0)
-                  {
-                     this.parent.vector.add(dd);
-                  }
-
-               }
-
-               for (let i=0;i<this.friction.length;i++)
-               {
-
-                  if ( this.parent.time - this.friction[i].time > this.friction[i].s)
-                  {
-                     removeFromArray2(this.friction,this.friction[i]);
-                     break;
-                  }
-               }
-
-         }
-
-   }
-
-}
-
-
-class FlyingComponent extends Component
-{
-
-   constructor()
-   {
-      super();
-
-      this.friction = [];
-
-
-   }
-
-   init()
-   {
-
-   }
-
-   getType()
-   {
-      return componentEnum.flying;
-   }
-
-
    update(delta)
    {
 
 
 
       let dist = delta/1000.0 * this.parent.speed;
-   //   let distance= min(dist,maxDistance);
+      //   let distance= min(dist,maxDistance);
 
       let vector = p5.Vector.mult(this.parent.direction,dist);
 
       this.parent.vector.add(vector);
 
-      this.handleFriction(dist);
+      let v = this.friction.handleFriction(dist,this.parent.direction,this.parent.time);
+      if (v)
+         this.parent.vector.add(v);
 
       this.parent.cell  = this.parent.getCellAtMe();
 
@@ -571,62 +634,19 @@ class FlyingComponent extends Component
 
 
 
-   slowed()
+   IsSlowed()
    {
-      return this.friction.length > 0;
+      return this.friction.has();
    }
 
-   slowDown(d,t,p)
+   addFriction(o)
    {
-         this.friction.push( { dist:d, time:this.parent.time ,s:t, who:p } );
 
-   }
+      this.friction.addFriction(o,this.parent.time);
 
-   isInFriction(p)
-   {
-         for (let i=0;i<this.friction.length;i++)
-         {
-            if (this.friction[i].who == p)
-            return true;
-         }
-         return false;
    }
 
 
-
-   handleFriction(distance)
-   {
-            if (this.friction.length>0)
-            {
-               let x = p5.Vector.mult(this.parent.direction,-1);
-
-               for (let i=0;i<this.friction.length;i++)
-               {
-                  let b = distance * (this.friction[i].dist/100);
-
-                  let dd = p5.Vector.mult(x,b);
-                  distance-=b;
-                  if (distance>0)
-                  {
-                     this.parent.vector.add(dd);
-                  }
-
-               }
-
-               for (let i=0;i<this.friction.length;i++)
-               {
-
-                  if ( this.parent.time - this.friction[i].time > this.friction[i].s)
-                  {
-                     removeFromArray2(this.friction,this.friction[i]);
-                     break;
-                  }
-               }
-
-
-         }
-
-   }
 
 }
 
@@ -653,10 +673,7 @@ class HealthComponent extends Component
       this.parent.register(this,messagesEnum.damage);
       this.parent.registerGetter(this,messagesEnum.hp);
    }
-   getType()
-   {
-      return componentEnum.hp;
-   }
+
 
    getHP()
    {
@@ -692,10 +709,6 @@ class HealthComponent extends Component
 
    }
 
-   message(x)
-   {
-      this.damage(x);
-   }
 
    receive(m,v)
    {
@@ -717,30 +730,30 @@ class HealthComponent extends Component
 
    getHpL()
    {
-         if (this.hp === this.startHp) return 1;
-         let d = this.hp / this.startHp;
-         return d;
+      if (this.hp === this.startHp) return 1;
+      let d = this.hp / this.startHp;
+      return d;
 
 
    }
 
    damage(z)
    {
-         if (this.parent.remove) return false;
-         if (this.armor>0)
-         {
-            this.armor-=z;
-            gongSound.play();
-            return false;
-         }
-         this.hp -=z;
-         if (this.hp<=0)
-         {
-            this.parent.doOnDead();
+      if (this.parent.remove) return false;
+      if (this.armor>0)
+      {
+         this.armor-=z;
+         gongSound.play();
+         return false;
+      }
+      this.hp -=z;
+      if (this.hp<=0)
+      {
+         this.parent.doOnDead();
 
-         }
+      }
 
-         return true;
+      return true;
    }
 
 
@@ -761,10 +774,6 @@ class MinionComponent extends Component
       this.c  =0;
    }
 
-   getType()
-   {
-      return componentEnum.minion;
-   }
 
 
    closeTo(e)
@@ -826,7 +835,7 @@ class MinionComponent extends Component
          {
             this.boss = null;
             this.parent.speed = getRndInteger(30,45);
-         //   this.moveComponent.calcRoute( );
+            //   this.moveComponent.calcRoute( );
          }
          else
          {
@@ -876,60 +885,60 @@ class SpawnComponent extends Component
 
    checkAround(c)
    {
-         //check 2 tiles away
-         for (let i=-2;i<=2;i+=4)
-         {
-            for (let j=-2;j<=2;j+=4)
-            {
-               let cell = gameMap.getCell(c.i-i,c.j-j);
-               if (canWalk(cell)) return cell;
-            }
-         }
-
-
-         //let cell = null;
-         let rightup = gameMap.getCell(c.i+1,c.j-1);
-         if (canWalk(rightup))
-         {
-            return rightup;
-         }
-
-         {
-            let rightdown = gameMap.getCell(c.i+1,c.j+1);
-            if (canWalk(rightdown))
-            {
-               return rightdown;
-            }
-         }
-
-         let leftdown = gameMap.getCell(c.i-1,c.j+1);
-         if (canWalk(leftdown))
-         {
-            return leftdown;
-
-         }
-
-
-         return null;
-      }
-
-      getPos()
+      //check 2 tiles away
+      for (let i=-2;i<=2;i+=4)
       {
-
-         let cell = this.checkAround(this.parent.cell);
-         if (cell)
+         for (let j=-2;j<=2;j+=4)
          {
-            return cell;
+            let cell = gameMap.getCell(c.i-i,c.j-j);
+            if (canWalk(cell)) return cell;
          }
-
-
-         return this.parent.cell;
       }
+
+
+      //let cell = null;
+      let rightup = gameMap.getCell(c.i+1,c.j-1);
+      if (canWalk(rightup))
+      {
+         return rightup;
+      }
+
+      {
+         let rightdown = gameMap.getCell(c.i+1,c.j+1);
+         if (canWalk(rightdown))
+         {
+            return rightdown;
+         }
+      }
+
+      let leftdown = gameMap.getCell(c.i-1,c.j+1);
+      if (canWalk(leftdown))
+      {
+         return leftdown;
+
+      }
+
+
+      return null;
+   }
+
+   getPos()
+   {
+
+      let cell = this.checkAround(this.parent.cell);
+      if (cell)
+      {
+         return cell;
+      }
+
+
+      return this.parent.cell;
+   }
 
 
    doOnDead()
    {
-   //   if (this.parent.remove) return;
+      //   if (this.parent.remove) return;
 
       beepSound.play();
       let m = getRndInteger(4,8);
@@ -963,10 +972,6 @@ class SpawnComponent2 extends SpawnComponent
       this.parent=null;
    }
 
-
-   update(delta)
-   {
-   }
 
    doOnDead()
    {
@@ -1009,11 +1014,13 @@ class SpawnComponent3 extends SpawnComponent
 
    }
 
+   doOnDead()
+   {
+
+   }
 
    update(delta)
    {
-
-      {
 
          if (this.counter++ % 25 !=0) return;
 
@@ -1024,11 +1031,8 @@ class SpawnComponent3 extends SpawnComponent
          e.speed = getRndInteger(this.parent.speed-2,this.parent.speed-1);
 
          beepSound.play();
-      }
 
    }
-
-
 
 
 
@@ -1048,25 +1052,25 @@ class PoisonComponent extends Component
    update(delta)
    {
 
+      {
+         if (this.c++ % 5 == 0) return;
+
+         let e = this.parent.cell;
+         let cells = getCells(e);
+         for (let i=0;i<cells.length;i++)
          {
-            if (this.c++ % 5 == 0) return;
 
-            let e = this.parent.cell;
-            let cells = getCells(e);
-            for (let i=0;i<cells.length;i++)
+
+            if (cells[i] && cells[i].tower && !cells[i].tower.disabled)
             {
+               if (getRndInteger(1,3)!=2) continue;
 
-
-               if (cells[i] && cells[i].tower && !cells[i].tower.disabled)
-               {
-                  if (getRndInteger(1,3)!=2) continue;
-
-                  skweakSound.play();
-                  cells[i].tower.disable();
-               }
-
+               skweakSound.play();
+               cells[i].tower.disable();
             }
+
          }
+      }
 
    }
 
@@ -1109,9 +1113,9 @@ class TowerSeekerComponent extends Component
       let ee = this.manager.findTower(this.parent.cell);
       if (ee)
       {
-            this.parent.end = ee.cell;
-            this.goal = ee.tower;
-            this.mover.calcRoute(false);
+         this.parent.end = ee.cell;
+         this.goal = ee.tower;
+         this.mover.calcRoute(false);
       }
       else {
          this.parent.end = Statics.exitCells[0];
@@ -1128,7 +1132,7 @@ class TowerSeekerComponent extends Component
       if (this.parent.speed == 0) return;
       if(this.dstate == eState.DONE)
       {
-      //   enemies_escaped += 1
+         //   enemies_escaped += 1
 
          //this.remove = true;
          //this.speed = 0;
@@ -1139,113 +1143,113 @@ class TowerSeekerComponent extends Component
       //console.log("reached end");
 
       let e = this.parent.getCellAtMe();
-   /*   if (Statics.exitCells.includes(e))
+      /*   if (Statics.exitCells.includes(e))
       {
-         g_enemies_escaped += 1
+      g_enemies_escaped += 1
 
 
-         this.remove = true;
-         this.speed = 0;
+      this.remove = true;
+      this.speed = 0;
 
 
-         return;
-      }*/
+      return;
+   }*/
 
-      this.parent.speed = 0;
+   this.parent.speed = 0;
 
 
-      let ok=false;
+   let ok=false;
 
-      let cells = getCells(e);
-      for (let i=0;i<cells.length;i++)
-      {
-         if (cells[i] && cells[i].tower && cells[i].tower==this.goal) {ok=true;break;}
-      }
-
-      this.dstate = ok?eState.DRILL:eState.THINK;
+   let cells = getCells(e);
+   for (let i=0;i<cells.length;i++)
+   {
+      if (cells[i] && cells[i].tower && cells[i].tower==this.goal) {ok=true;break;}
    }
 
-   aimAt()
+   this.dstate = ok?eState.DRILL:eState.THINK;
+}
+
+aimAt()
+{
+   if (!this.goal) return;
+   if (this.dlength!=10 ) return;
+   let dir = p5.Vector.sub(this.goal.position,this.parent.vector);
+
+   dir.y *=-1;
+   this.aim = dir;
+   this.aim.normalize();
+
+
+}
+
+
+
+update(delta)
+{
+   if (this.c++ % 10 ==0)
    {
-      if (!this.goal) return;
-      if (this.dlength!=10 ) return;
-      let dir = p5.Vector.sub(this.goal.position,this.parent.vector);
 
-      dir.y *=-1;
-      this.aim = dir;
-      this.aim.normalize();
-
-
-   }
-
-
-
-   update(delta)
-   {
-      if (this.c++ % 10 ==0)
+      this.aimAt();
+      if (this.dstate === eState.THINK)
       {
-
-         this.aimAt();
-         if (this.dstate === eState.THINK)
+         this.goal = null;
+         let e = this.manager.findTower(this.parent.cell);
+         if (e)
          {
-            this.goal = null;
-            let e = this.manager.findTower(this.parent.cell);
-            if (e)
-            {
-               this.parent.end = e.cell;
-               this.goal = e.tower;
-            }
-            this.speed= 40;
-            this.dstate =eState.SEARCH;
-
-            this.mover.calcRoute(false);
-
-
+            this.parent.end = e.cell;
+            this.goal = e.tower;
          }
-         else if (this.dstate === eState.DRILL)
-         {
+         this.speed= 40;
+         this.dstate =eState.SEARCH;
+
+         this.mover.calcRoute(false);
+
+
+      }
+      else if (this.dstate === eState.DRILL)
+      {
          //   console.log("drilling");
-            this.dlength+=1;
-            if (this.dlength > 25)
-            {
-               this.doOnDrillDone();
-            //   console.log("drilling done");
-               this.dstate = eState.PULL_UP;
-
-            }
-
-         }
-         else if (this.dstate === eState.PULL_UP)
+         this.dlength+=1;
+         if (this.dlength > 25)
          {
-            this.dlength-=3;
-            if (this.dlength < 11)
-            {
+            this.doOnDrillDone();
+            //   console.log("drilling done");
+            this.dstate = eState.PULL_UP;
 
-               this.doOnPulledUp();
-            }
          }
 
       }
+      else if (this.dstate === eState.PULL_UP)
+      {
+         this.dlength-=3;
+         if (this.dlength < 11)
+         {
 
-      renderSystem.addRender( new RenderSeekerAim(this.parent.vector.x,this.parent.vector.y,this.aim,this.dlength));
+            this.doOnPulledUp();
+         }
+      }
 
    }
 
+   renderSystem.addRender( new RenderSeekerAim(this.parent.vector.x,this.parent.vector.y,this.aim,this.dlength));
 
-   doOnPulledUp()
-   {
-      this.dstate = eState.DONE;
-      this.parent.end = Statics.exitCells[0];
-      this.goal  =null;
-      this.parent.speed = 40;
-      this.mover.calcRoute(true);
-   }
+}
 
-   doOnDrillDone()
-   {
-      skweakSound.play();
-      this.goal.disable();
-   }
+
+doOnPulledUp()
+{
+   this.dstate = eState.DONE;
+   this.parent.end = Statics.exitCells[0];
+   this.goal  =null;
+   this.parent.speed = 40;
+   this.mover.calcRoute(true);
+}
+
+doOnDrillDone()
+{
+   skweakSound.play();
+   this.goal.disable();
+}
 
 
 

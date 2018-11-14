@@ -8,7 +8,10 @@ var messagesEnum =
    hp:4,
    damage:8,
    friction:16,
-   route:32
+   route:32,
+   setRoute:64,
+   pathlength:128
+
 
 }
 
@@ -94,7 +97,6 @@ class TObject
          });
    }
 
-   show() {}
 
    doOnDead()
    {
@@ -171,7 +173,6 @@ class FlyingtObject extends EnemyObject
       super(start);
 
       let healthComponent = new HealthComponent(false,hp);
-      this.speed =1;
       this.trans = new FlyingTransformComponent(images[0].width/2,images[0].height/2) ;
       this.add(healthComponent);
       this.add(new FlyingComponent());
@@ -180,21 +181,8 @@ class FlyingtObject extends EnemyObject
 
       this.name ="Flier";
       this.direction = this.i==0?Statics.getRight():Statics.getDown();
-
+      this.prio = 1;
    }
 
-
-/*
-   update(delta)
-   {
-      if (this.remove) return;
-      this.time+=delta;
-
-      for (let i=0;i<this.components.length;i++)
-      {
-         this.components[i].update(delta);
-      }
-   }
-*/
 
 }

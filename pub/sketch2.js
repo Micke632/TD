@@ -70,16 +70,13 @@ let selectedTowerInfoWindow;
 
 let input;
 
-
 let pause_game = false;
 
 let lastTower =  null;
 let lastCurrent  =null;
 let towerSelected  =true;
 
-
 var towers_removed  = 0;
-
 
 var gameMap = null;
 var enemyManager = null;
@@ -122,6 +119,87 @@ function isNoGame()
 	return gameState == gameStateEnum.ENUM_OFF;
 }
 
+
+
+getCells = function(e)
+{
+   let right = gameMap.getCell(e.i+1,e.j);
+
+   let top  =  gameMap.getCell(e.i,e.j-1);
+
+   let left =  gameMap.getCell(e.i-1,e.j);
+   let bottom =  gameMap.getCell(e.i,e.j+1);
+   let bottomright = null;
+   let rightUp = null;
+   let rightright = null;
+   let bottomLeft = null;
+   let bottomDown = null;
+   if (bottom )
+   {
+      bottomright =  gameMap.getCell(bottom.i+1,bottom.j);
+      bottomDown =  gameMap.getCell(bottom.i,bottom.j+1);
+
+      bottomLeft=  gameMap.getCell(bottom.i-1,bottom.j);
+   }
+   if (right)
+   {
+      rightright = gameMap.getCell(right.i+1,right.j);
+
+      rightUp =  gameMap.getCell(right.i,right.j-1);
+
+   }
+   let bottomrightRight = null;
+   let bottomrightDown = null;
+   if (bottomright )
+   {
+      bottomrightRight =  gameMap.getCell(bottomright.i+1,bottomright.j);
+      bottomrightDown =  gameMap.getCell(bottomright.i,bottomright.j+1);
+   }
+   let bottomleftdown = null;
+   if (bottomLeft )
+   {
+      bottomleftdown =  gameMap.getCell(bottomLeft.i,bottomLeft.j+1);
+
+   }
+   let bottomrightRightDown = null;
+   if (bottomrightRight )
+   {
+      bottomrightRightDown =  gameMap.getCell(bottomrightRight.i,bottomrightRight.j+1);
+
+   }
+   let rightrightUp = null;
+   if (rightright)
+   {
+      rightrightUp =  gameMap.getCell(rightright.i,rightright.j-1);
+
+   }
+
+   let leftUp = null;
+   if (left)
+   {
+      leftUp =  gameMap.getCell(left.i,left.j-1);
+
+   }
+
+   let ar = new Array();
+   ar.push(top);
+   ar.push(left);
+   ar.push(rightright);
+   ar.push(rightUp);
+   ar.push(bottomrightRight);
+   ar.push(bottomrightDown);
+   ar.push(bottomLeft);
+   ar.push(bottomleftdown);
+   ar.push(bottomrightRightDown);
+   ar.push(rightrightUp);
+   ar.push(leftUp);
+
+
+
+   return ar;
+
+
+}
 
 
 class Statics
@@ -464,7 +542,6 @@ function setup() {
 
    console.log("width cell "+CELL_WIDTH);
    console.log("height cell "+CELL_HEIGHT);
-   // console.log("window width "+width);
 
    towersImage.resize(SIDE,TOP*2);
 

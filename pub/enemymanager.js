@@ -45,10 +45,10 @@ class EnemyManager
       this.asteriodSpider = [];
       this.asteriodSpider.push(asteroidImageSpider);
 
-      this.asteridInv = [];
-      this.asteridInv.push(asteroidImageRed);
-      this.asteridInv[0].resize(floor(CELL_WIDTH-4),floor(CELL_HEIGHT-4));
-      this.asteridInv[0].filter(INVERT);
+      this.asteriodInv = [];
+      this.asteriodInv.push(asteroidImageRed);
+      this.asteriodInv[0].resize(floor(CELL_WIDTH-4),floor(CELL_HEIGHT-4));
+      this.asteriodInv[0].filter(INVERT);
 
       this.tree = [];
       this.tree.push(treeImage.get());
@@ -228,7 +228,7 @@ class EnemyManager
       else if (type===EnemyType.MORPHG)
       {
          let hp =  this.getHp(55,lvl);
-         e = this.createMorphEnemy(pos,end,asteroidImageAnim,this.asteridInv, hp);
+         e = this.createMorphEnemy(pos,end,asteroidImageAnim,this.asteriodInv, hp);
          e.speed = this.getSpeed(25,lvl);
 
 
@@ -540,7 +540,7 @@ class EnemyManager
 
 
 
-
+/*
    findTower2(e)
    {
       g_towers.sort(function(a,b) {
@@ -579,7 +579,7 @@ class EnemyManager
       e.calcRoute( );
 
    }
-
+*/
 
    findGoal(cell,ee)
    {
@@ -595,7 +595,7 @@ class EnemyManager
          if (!cc[k]) continue;
          if (cc[k].tower) continue;
 
-         if (this.CheckRouteFrom(cell,cc[k]))
+         if (this.checkRouteFrom(cell,cc[k]))
          {
             return cc[k];
          }
@@ -649,7 +649,7 @@ class EnemyManager
          }
 
 
-         //console.log(e);
+
          let end = this.getShortestEndFrom(startposIndex);
 
          let e = this.create(this.startpositions[startposIndex],end, type, lvl);
@@ -661,6 +661,7 @@ class EnemyManager
          e.end = this.endpositions[end];
 
          {
+
             // copy path to enemy
          //   let l = this.paths.get(path);
 
@@ -673,7 +674,7 @@ class EnemyManager
       }
    }
 
-   CheckRouteFrom(fromCell,toCell)
+   checkRouteFrom(fromCell,toCell)
    {
       let ok = this.mw.findRoute(function(){
                               gameMap.resetPathInfo();

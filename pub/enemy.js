@@ -1,90 +1,6 @@
 
 
 
-getCells = function(e)
-{
-   let right = gameMap.getCell(e.i+1,e.j);
-
-   let top  =  gameMap.getCell(e.i,e.j-1);
-
-   let left =  gameMap.getCell(e.i-1,e.j);
-   let bottom =  gameMap.getCell(e.i,e.j+1);
-   let bottomright = null;
-   let rightUp = null;
-   let rightright = null;
-   let bottomLeft = null;
-   let bottomDown = null;
-   if (bottom )
-   {
-      bottomright =  gameMap.getCell(bottom.i+1,bottom.j);
-      bottomDown =  gameMap.getCell(bottom.i,bottom.j+1);
-
-      bottomLeft=  gameMap.getCell(bottom.i-1,bottom.j);
-   }
-   if (right)
-   {
-      rightright = gameMap.getCell(right.i+1,right.j);
-
-      rightUp =  gameMap.getCell(right.i,right.j-1);
-
-   }
-   let bottomrightRight = null;
-   let bottomrightDown = null;
-   if (bottomright )
-   {
-      bottomrightRight =  gameMap.getCell(bottomright.i+1,bottomright.j);
-      bottomrightDown =  gameMap.getCell(bottomright.i,bottomright.j+1);
-   }
-   let bottomleftdown = null;
-   if (bottomLeft )
-   {
-      bottomleftdown =  gameMap.getCell(bottomLeft.i,bottomLeft.j+1);
-
-   }
-   let bottomrightRightDown = null;
-   if (bottomrightRight )
-   {
-      bottomrightRightDown =  gameMap.getCell(bottomrightRight.i,bottomrightRight.j+1);
-
-   }
-   let rightrightUp = null;
-   if (rightright)
-   {
-      rightrightUp =  gameMap.getCell(rightright.i,rightright.j-1);
-
-   }
-
-   let leftUp = null;
-   if (left)
-   {
-      leftUp =  gameMap.getCell(left.i,left.j-1);
-
-   }
-
-   let ar = new Array();
-   ar.push(top);
-   ar.push(left);
-   ar.push(rightright);
-   ar.push(rightUp);
-   ar.push(bottomrightRight);
-   ar.push(bottomrightDown);
-   ar.push(bottomLeft);
-   ar.push(bottomleftdown);
-   ar.push(bottomrightRightDown);
-   ar.push(rightrightUp);
-   ar.push(leftUp);
-
-
-
-   return ar;
-
-
-}
-
-
-
-
-
 
 
 
@@ -95,25 +11,25 @@ class Enemy
    {
 
       this.manager = home;
-      this.i = start.i;
-      this.j = start.j;
+      //this.i = start.i;
+      //this.j = start.j;
       this.hp = 9;
       this.points = 2;
 
       this.startHp=this.hp;
 
-      this.time = 0;
+      //this.time = 0;
       this.remove = false;
-      this.speed = 35;
+      //this.speed = 35;
 
 
 
 
-      this.vector = createVector(gameMap.getX(this.i), gameMap.getY(this.j));
+   //   this.vector = createVector(gameMap.getX(this.i), gameMap.getY(this.j));
 
-      this.direction = Statics.getRight();
+      //this.direction = Statics.getRight();
 
-      this.cell  = this.getCellAtMe();
+      //this.cell  = this.getCellAtMe();
 
       this.end = null;
 
@@ -125,13 +41,13 @@ class Enemy
       this.frameCounter = 0;
       this.boss = null;
       this.armor = 0;
-      this.friction = [];
+      //this.friction = [];
       this.normalExits = true;
       this.immune=false;
       this.prio = 10;
       this.name = "Vanilla";
 
-      this.pathHelper = new PathHelper(new MazeWalker(Statics.exitCells),
+      /*this.pathHelper = new PathHelper(new MazeWalker(Statics.exitCells),
                                  this.images[0].width,
                                  this.images[0].height,
                                  CELL_WIDTH,
@@ -143,6 +59,7 @@ class Enemy
                                  );
 
 
+*/
 
 
    }
@@ -152,17 +69,19 @@ class Enemy
       return this.name;
    }
 
-   canBeSlowed()
+   /*canBeSlowed()
    {
       if (this.immune) return false;
       if (this.speed==0) return false;
       return true;
    }
+*/
 
-   slowed()
+/*   slowed()
    {
       return this.friction.length > 0;
    }
+*/
 
    setEnd(end)
    {
@@ -215,14 +134,15 @@ class Enemy
       popSound.play();
    }
 
-
+/*
    getCellAtMe()
    {
       let i = gameMap.getI(this.vector.x);
       let j = gameMap.getJ(this.vector.y);
       return  gameMap.getCell(i,j);
    }
-
+*/
+/*
    makeDirectionFrom(d)
    {
 
@@ -244,7 +164,7 @@ class Enemy
       }
 
    }
-
+*/
    getPathLength()
    {
       if (this.normalExits)
@@ -269,7 +189,7 @@ class Enemy
       return true;
 
    }
-
+/*
    setRoutePath(p)
    {
       this.pathHelper.setRoutePath(p);
@@ -281,7 +201,7 @@ class Enemy
       this.makeDirectionFrom(this.pathHelper.getDirection());
 
    }
-
+*/
    closeTo(e)
    {
 
@@ -299,7 +219,7 @@ class Enemy
       return false;
 
    }
-
+/*
    doStuff()
    {
 
@@ -359,71 +279,31 @@ class Enemy
 
 
    }
-
-   handleFriction(distance)
-   {
-      if (this.friction.length>0)
-      {
-         let x = p5.Vector.mult(this.direction,-1);
-
-         for (let i=0;i<this.friction.length;i++)
-         {
-            let b = distance * (this.friction[i].dist/100);
-
-            let dd = p5.Vector.mult(x,b);
-            distance-=b;
-            if (distance>0)
-            {
-               this.vector.add(dd);
-            }
-
-         }
-
-
-         for (let i=0;i<this.friction.length;i++)
-         {
-
-            if ( this.time - this.friction[i].time > this.friction[i].s)
-            {
-               removeFromArray2(this.friction,this.friction[i]);
-               break;
-            }
-         }
-
-      }
-   }
+*/
 
    update(dtime)
    {
       if (this.remove) return;
 
-      this.time+=dtime;
-      let maxDistance = this.pathHelper.getMaxDistance();
-
-      let dist = dtime/1000.0 * this.speed;
-      let distance= min(dist,maxDistance);
-
-      let vector = p5.Vector.mult(this.direction,distance);
-
-      this.vector.add(vector);
+      this.moveableComponent.update(dtime,this.pathHelper.getMaxDistance());
+      this.frictionComponent.update(dtime);
 
 
-      this.handleFriction(distance);
+      this.frictionComponent.handleFriction(this.moveableComponent.direction,this.moveableComponent.vector);
 
 
-      this.cell = this.getCellAtMe();
 
-      let result = this.pathHelper.checkPath(this.cell,this.vector.x,this.vector.y);
+      let result = this.pathComponent.pathHelper.checkPath(this.moveableComponent.cell,this.moveableComponent.vector.x,this.moveableComponent.vector.y);
 
       if (result == PathResultEnum.ENUM_NEW_CELL)
       {
-         this.makeDirectionFrom(this.pathHelper.getDirection());
+         this.moveableComponent.makeDirectionFrom(this.pathComponent.pathHelper.getDirection());
       }
       else if (result == PathResultEnum.ENUM_REACH_DEST)
       {
          //console.log("dest");
          //some have towers as destination
-         if (!Statics.exitCells.includes(this.cell))
+         if (!Statics.exitCells.includes(this.moveableComponent.cell))
          {
             this.doOnReachEnd();
          }
@@ -440,7 +320,7 @@ class Enemy
       {
          return;
       }
-      else if (result == PathResultEnum.ENUM_LOST)
+      /*else if (result == PathResultEnum.ENUM_LOST)
       {
          let c = this.findCellAround(this.cell);
          if (!c)
@@ -458,12 +338,12 @@ class Enemy
 
          return;
       }
+*/
 
-
-
+/*
       if (this.frameCounter++ % 10 == 0)
          this.doStuff();
-
+*/
 
    }
 
@@ -536,7 +416,7 @@ class Enemy
 
 
    }
-
+/*
    slowDown(d,t,p)
    {
       this.friction.push( { dist:d, time:this.time ,s:t, who:p } );
@@ -552,6 +432,7 @@ class Enemy
       }
       return false;
    }
+*/
 
    show()
    {
@@ -584,7 +465,7 @@ class Enemy
 }
 
 ////////////////////////////////////////////////////////////////
-
+/*
 class Enemy2 extends Enemy
 {
    constructor(h,start,image,images)
@@ -686,9 +567,9 @@ class Enemy2 extends Enemy
 
 
 }
-
+*/
 ///////////////////////////////////////////
-
+/*
 class Enemy2A extends Enemy2
 {
    constructor(h,start,image,images,image2)
@@ -747,8 +628,10 @@ class Enemy2A extends Enemy2
 
    }
 }
-///////////////////////////////////////////////
 
+*/
+///////////////////////////////////////////////
+/*
 class Enemy2B extends Enemy2
 {
    constructor(h,start,image,images)
@@ -789,9 +672,10 @@ class Enemy2B extends Enemy2
    }
 
 }
+*/
 
 /////////////////////////////////////////////////////////////
-
+/*
 class Enemy3 extends Enemy
 {
    constructor(h,start,image, images2)
@@ -859,7 +743,10 @@ class Enemy3 extends Enemy
 
    }
 }
+*/
 
+
+/*
 
 class EnemyPoison extends Enemy
 {
@@ -898,20 +785,10 @@ class EnemyPoison extends Enemy
    }
 
 }
-
+*/
 /////////////////////////////////////////
 
-var eState =
-{
-   SEARCH : 0,
-   DRILL : 1,
-   PULL_UP : 2,
-   DONE : 3,
-   THINK : 4,
-
-
-}
-
+/*
 
 class EnemySeeker extends Enemy
 {
@@ -944,7 +821,7 @@ class EnemySeeker extends Enemy
       return;
    }
 
-   */
+
 
    let e = this.getCellAtMe();
    if (Statics.exitCells.includes(e))
@@ -1063,8 +940,10 @@ doOnDrillDone()
    this.goal.disable();
 }
 }
-
+*/
 ///////////////////////////////////
+
+/*
 class EnemySeeker2 extends EnemySeeker
 {
 
@@ -1089,7 +968,11 @@ class EnemySeeker2 extends EnemySeeker
       //this.goal.disable();
    }
 }
+
+*/
 //////////////////////
+
+/*
 class EnemyPlane
 {
 
@@ -1280,3 +1163,5 @@ class EnemyPlane
 
    }
 }
+
+*/
