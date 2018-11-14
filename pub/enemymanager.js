@@ -192,7 +192,7 @@ class EnemyManager
       {
          let hp = this.getHp(9,lvl);
          e = this.createEnemy(pos,end,this.asteriod,hp);
-         e.speed = this.getSpeed(15,lvl);
+         e.speed = this.getSpeed(25,lvl);
       }
       else if (type===EnemyType.SPIDER)
       {
@@ -202,17 +202,17 @@ class EnemyManager
             hp = this.getHp(40,lvl);
          }
          else
-            hp = this.getHp(80,lvl);
+         hp = this.getHp(80,lvl);
 
          e = this.createSpawnEnemy(pos,end,this.asteriodSpider, this.asteriod, hp);
-         e.speed = this.getSpeed(15,lvl);
+         e.speed = this.getSpeed(25,lvl);
 
       }
       else if (type===EnemyType.BIG)
       {
          let hp =  this.getHp(20,lvl);
          e = this.entityManager.createEnemy(pos,end,this.asteriodBigger, hp);
-         e.speed = this.getSpeed(10,lvl);
+         e.speed = this.getSpeed(25,lvl);
          e.name="BIG";
          e.prio = 8;
       }
@@ -220,7 +220,7 @@ class EnemyManager
       {
          let hp =  this.getHp(30,lvl);
          e = this.createEnemy(pos,end,this.asteroidImageAnim, hp);
-         e.speed = this.getSpeed(15,lvl);
+         e.speed = this.getSpeed(25,lvl);
          e.name="STONE";
          e.prio = 7;
 
@@ -283,7 +283,7 @@ class EnemyManager
       {
          let hp =  this.getHp(55,lvl);
          e = this.createImmuneEnemy(pos,end,asteroidImageAnim3, hp);
-         e.speed = this.getSpeed(20,lvl);
+         e.speed = this.getSpeed(25,lvl);
 
 
 
@@ -321,24 +321,15 @@ class EnemyManager
       e.add( new EnemyGraphicComponent(images,healthComponent, trans) );
    }
 
-   addDefaultComponents2(e, images, healthComponent)
-   {
-      let moveableComponent = new MoveableComponent(images[0].width,images[0].height);
-      let trans = new TransformComponent();
-      e.add(moveableComponent);
-      e.add(healthComponent);
-      e.add(trans);
-      e.add( new EnemyGraphicComponent(images,healthComponent, trans) );
-   }
 
    createEnemy(start,end,images,hp)
    {
-         let e = new EnemyObject(start);
-         this.addDefaultComponents(e,images,hp);
-         e.end = end;
-         e.initComponents();
-         g_enemies.push(e);
-         return e;
+      let e = new EnemyObject(start);
+      this.addDefaultComponents(e,images,hp);
+      e.end = end;
+      e.initComponents();
+      g_enemies.push(e);
+      return e;
 
    }
 
@@ -355,54 +346,47 @@ class EnemyManager
 
    createPoisonEnemy(start,end,images,hp)
    {
-         let e = new EnemyObject(start);
-         e.add(new PoisonComponent());
-         this.addDefaultComponents(e,images,hp);
-         e.end = end;
-         e.initComponents();
-         e.prio = 2;
-         g_enemies.push(e);
-         return e;
+      let e = new EnemyObject(start);
+      this.addDefaultComponents(e,images,hp);
+      e.add(new PoisonComponent());
+      e.end = end;
+      e.initComponents();
+      e.prio = 2;
+      g_enemies.push(e);
+      return e;
    }
 
    createSpawnEnemy(start,end,images,images2,hp)
    {
-         let e = new EnemyObject(start);
-         let healthComponent = new HealthComponent(false,hp);
-         this.addDefaultComponents2(e,images,healthComponent);
-         e.add(new SpawnComponent(healthComponent,this,images2));
-
-         e.prio = 8;
-         e.name = "Spawn";
-         e.end = end;
-         e.initComponents();
-         g_enemies.push(e);
-         return e;
+      let e = new EnemyObject(start);
+      this.addDefaultComponents(e,images);
+      e.add(new SpawnComponent(this,images2));
+      e.prio = 8;
+      e.name = "Spawn";
+      e.end = end;
+      e.initComponents();
+      g_enemies.push(e);
+      return e;
    }
 
    createSpawn2Enemy(start,end,images,images2,images3,hp)
    {
-         let e = new EnemyObject(start);
-
-         let healthComponent = new HealthComponent(false,hp);
-         this.addDefaultComponents2(e,images,healthComponent);
-         e.add(new SpawnComponent2(healthComponent,this,images2, images3));
-         e.prio = 7;
-         e.name = "Spawn2";
-         e.end = end;
-         e.initComponents();
-         g_enemies.push(e);
-         return e;
+      let e = new EnemyObject(start);
+      this.addDefaultComponents(e,images);
+      e.add(new SpawnComponent2(this,images2, images3));
+      e.prio = 7;
+      e.name = "Spawn2";
+      e.end = end;
+      e.initComponents();
+      g_enemies.push(e);
+      return e;
    }
 
    createSpawn3Enemy(start,end,images,images2,hp)
    {
       let e = new EnemyObject(start);
-
-      let healthComponent = new HealthComponent(false,hp);
-      this.addDefaultComponents2(e,images,healthComponent);
-
-      e.add(new SpawnComponent3(healthComponent,this,images2,hp));
+      this.addDefaultComponents(e,images);
+      e.add(new SpawnComponent3(this,images2,hp));
       e.prio = 6;
       e.name = "Spawn3";
       e.end = end;
@@ -467,24 +451,16 @@ class EnemyManager
 
    createMinionEnemy(start,end,images,hp)
    {
-         let e = new EnemyObject(start);
-         e.end = end;
-         e.prio = 7;
-         e.name  = "Minion";
-         let moveableComponent = new MoveableComponent(images[0].width,images[0].height);
-         let healthComponent = new HealthComponent(false,hp);
-         let trans = new TransformComponent();
+      let e = new EnemyObject(start);
+      e.end = end;
+      e.prio = 7;
+      e.name  = "Minion";
+      this.addDefaultComponents(e,images);
+      e.add(new MinionComponent());
 
-         e.add(moveableComponent);
-         e.add(healthComponent);
-         e.add(trans);
-         e.add( new EnemyGraphicComponent(images,healthComponent, trans) );
-
-         e.add(new MinionComponent(healthComponent,moveableComponent));
-
-         e.initComponents();
-         g_enemies.push(e);
-         return e;
+      e.initComponents();
+      g_enemies.push(e);
+      return e;
    }
 
    createSeekerEnemy(start,images,hp,armor)
@@ -497,7 +473,7 @@ class EnemyManager
       let healthComponent = new HealthComponent(false,hp);
       healthComponent.armor = armor;
       let trans = new TransformComponent();
-      let seeker = new TowerSeekerComponent(this,moveableComponent);
+      let seeker = new TowerSeekerComponent(this);
 
       e.add(moveableComponent);
       e.add(healthComponent);
@@ -540,169 +516,171 @@ class EnemyManager
 
 
 
-/*
+   /*
    findTower2(e)
    {
-      g_towers.sort(function(a,b) {
+   g_towers.sort(function(a,b) {
 
-         let x = Statics.startCells[4]
-         let i = dist(x.i, x.j ,a.i,a.j);
-         let j = dist(x.i, x.j ,b.i,b.j);
-         return i-j;
+   let x = Statics.startCells[4]
+   let i = dist(x.i, x.j ,a.i,a.j);
+   let j = dist(x.i, x.j ,b.i,b.j);
+   return i-j;
 
-      } )
+} )
 
-      for (let i=0;i<20;i++)
-      {
-         let tower = g_towers[i];
-         if (!tower) continue;
-         let c = gameMap.getCell(tower.i,tower.j);
-         let cells = getCells(c);
-         let x  = 0;
-         for (let i=0;i<cells.length;i++)
-         {
-            if (cells[i] && cells[i].tower) x++;
-         }
-         if (x>=4) continue;
+for (let i=0;i<20;i++)
+{
+let tower = g_towers[i];
+if (!tower) continue;
+let c = gameMap.getCell(tower.i,tower.j);
+let cells = getCells(c);
+let x  = 0;
+for (let i=0;i<cells.length;i++)
+{
+if (cells[i] && cells[i].tower) x++;
+}
+if (x>=4) continue;
 
-         if (this.findGoal(e,tower))
-         {
-            e.goal = tower;
-            return;
-         }
-      }
+if (this.findGoal(e,tower))
+{
+e.goal = tower;
+return;
+}
+}
 
-      //found no towers,go to exit
+//found no towers,go to exit
 
-      e.normalExits = true;
-      e.end = Statics.exitCells[0];
-      e.calcRoute( );
+e.normalExits = true;
+e.end = Statics.exitCells[0];
+e.calcRoute( );
 
-   }
+}
 */
 
-   findGoal(cell,ee)
+findGoal(cell,ee)
+{
+
+
+   let cc = [gameMap.getCell(ee.i,ee.j-1),gameMap.getCell(ee.i-1,ee.j),gameMap.getCell(ee.i-1,ee.j+1),gameMap.getCell(ee.i+2,ee.j),gameMap.getCell(ee.i+2,ee.j+1),gameMap.getCell(ee.i,ee.j+2),gameMap.getCell(ee.i+1,ee.j+2),gameMap.getCell(ee.i+2,ee.j-1),gameMap.getCell(ee.i-1,ee.j-1),gameMap.getCell(ee.i+2,ee.j+2),gameMap.getCell(ee.i-1,ee.j+2),gameMap.getCell(ee.i+1,ee.j-1)];
+
+
+
+   for (let k=0;k<cc.length;k++)
    {
 
+      if (!cc[k]) continue;
+      if (cc[k].tower) continue;
 
-      let cc = [gameMap.getCell(ee.i,ee.j-1),gameMap.getCell(ee.i-1,ee.j),gameMap.getCell(ee.i-1,ee.j+1),gameMap.getCell(ee.i+2,ee.j),gameMap.getCell(ee.i+2,ee.j+1),gameMap.getCell(ee.i,ee.j+2),gameMap.getCell(ee.i+1,ee.j+2),gameMap.getCell(ee.i+2,ee.j-1),gameMap.getCell(ee.i-1,ee.j-1),gameMap.getCell(ee.i+2,ee.j+2),gameMap.getCell(ee.i-1,ee.j+2),gameMap.getCell(ee.i+1,ee.j-1)];
-
-
-
-      for (let k=0;k<cc.length;k++)
+      if (this.checkRouteFrom(cell,cc[k]))
       {
-
-         if (!cc[k]) continue;
-         if (cc[k].tower) continue;
-
-         if (this.checkRouteFrom(cell,cc[k]))
-         {
-            return cc[k];
-         }
-
-      }
-
-      return null;
-   }
-
-
-   createSeeker(lvl)
-   {
-
-      sortTowers();
-
-      {
-         let hp = 480+(lvl*3);
-         let p = getRndInteger(0,this.startpositions.length+1);
-         if (p==this.startpositions.length) p=1;
-
-         let e = this.createSeekerEnemy(this.startpositions[p],this.asteriodBigger, hp, 50);
-
-         e.speed+=10 + (lvl/4);
-
+         return cc[k];
       }
 
    }
 
-   createEnemies(nr,type,lvl)
+   return null;
+}
+
+
+createSeeker(lvl)
+{
+
+   sortTowers();
+
    {
-      this.calcShortest(false);
+      let hp = 480+(lvl*3);
+      let p = getRndInteger(0,this.startpositions.length+1);
+      if (p==this.startpositions.length) p=1;
+
+      let e = this.createSeekerEnemy(this.startpositions[p],this.asteriodBigger, hp, 50);
+
+      e.speed+=10 + (lvl/4);
+
+   }
+
+}
+
+createEnemies(nr,type,lvl)
+{
+   this.calcShortest(false);
 
 
-      let even = false;
-      if (nr == 2 ) even=true;
+   let even = false;
+   if (nr == 2 ) even=true;
 
-      for (let i=0;i<nr;i++)
+   for (let i=0;i<nr;i++)
+   {
+      let startposIndex=0;
+
+      if (even)
       {
-         let startposIndex=0;
+         startposIndex = i;
+      }
+      else
+      {
+         startposIndex = getRndInteger(0,this.startpositions.length+1);
 
-         if (even)
-         {
-            startposIndex = i;
-         }
-         else
-         {
-            startposIndex = getRndInteger(0,this.startpositions.length+1);
+         if (startposIndex==this.startpositions.length) startposIndex=1;   //prefere to use startpos 1
 
-            if (startposIndex==this.startpositions.length) startposIndex=1;   //prefere to use startpos 1
-
-         }
+      }
 
 
 
-         let end = this.getShortestEndFrom(startposIndex);
+      let end = this.getShortestEndFrom(startposIndex);
+      let endCell = this.endpositions[end];
 
-         let e = this.create(this.startpositions[startposIndex],end, type, lvl);
+      let e = this.create(this.startpositions[startposIndex],endCell, type, lvl);
 
-         let path = this.getPathRoute(startposIndex,end);
+      //let path = this.getPathRoute(startposIndex,end);
 
-         e.speed = getRndInteger(e.speed-1 , e.speed+2);
+      e.speed = getRndInteger(e.speed-1 , e.speed+2);
 
-         e.end = this.endpositions[end];
 
-         {
 
-            // copy path to enemy
+      {
+
+         // copy path to enemy
          //   let l = this.paths.get(path);
 
          //   e.setRoutePath(l);
          //   e.setNextCellFrom(this.startpositions[startposIndex]);
 
-         }
-
-         g_enemies.push(e);
       }
-   }
 
-   checkRouteFrom(fromCell,toCell)
-   {
-      let ok = this.mw.findRoute(function(){
+      //g_enemies.push(e);
+   }
+}
+
+checkRouteFrom(fromCell,toCell)
+{
+   let ok = this.mw.findRoute(function(){
                               gameMap.resetPathInfo();
-                           },
-                           false,fromCell,toCell,false);
-      return ok;
-   }
+                              },
+                              false,fromCell,toCell,false);
+
+   return ok;
+}
 
 
-   calcRoute()
+calcRoute()
+{
+
+   if (!this.calcShortest(true))
    {
-
-      if (!this.calcShortest(true))
-      {
-         return false;
-      }
-
-      for (let i=0;i<g_enemies.length;i++)
-      {
-         if (!g_enemies[i].remove)
-         {
-
-            g_enemies[i].send(messagesEnum.route)
-         }
-
-
-      }
-
-      return true;
+      return false;
    }
+
+   for (let i=0;i<g_enemies.length;i++)
+   {
+      if (!g_enemies[i].remove)
+      {
+
+         g_enemies[i].send(messagesEnum.route,true);
+      }
+
+
+   }
+
+   return true;
+}
 }

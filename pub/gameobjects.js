@@ -1,6 +1,4 @@
 
-
-
 var messagesEnum =
 {
    movement:1,
@@ -140,9 +138,6 @@ class EnemyObject extends TObject
    {
       if (this.remove) return;
 
-      g_points +=this.points;
-
-      g_total_score += this.points;
       this.remove = true;
 
       for (let i=0;i<this.components.length;i++)

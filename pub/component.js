@@ -276,7 +276,7 @@ receive(m,v)
    }
    else if (m == messagesEnum.route)
    {
-      this.calcRoute(true);
+      this.calcRoute(v);
    }
    else if (m == messagesEnum.setRoute)
    {
@@ -300,10 +300,10 @@ get(m)
 }
 
 
-calcRoute(exits)
+calcRoute(normalExits)
 {
 
-   if (!this.pathHelper.calcRoute(this.parent.cell, this.parent.end, exits))
+   if (!this.pathHelper.calcRoute(this.parent.cell, this.parent.end, normalExits))
    {
       return false;
    }
@@ -475,8 +475,6 @@ addFriction(o)
    if (!this.immune)
 
    this.friction.addFriction(o,this.parent.time);
-
-
 }
 
 
@@ -583,7 +581,7 @@ class HealthComponent extends Component
       this.points = 2+ this.hp /3;
       this.armor  = 0;
       this.state = true;
-      this.c = 10;
+      this.counter = 10;
       this.morf = isMorf;
    }
 
@@ -593,6 +591,12 @@ class HealthComponent extends Component
       this.parent.registerGetter(this,messagesEnum.hp);
    }
 
+   doOnDead()
+   {
+      g_points +=this.points;
+      g_total_score += this.points;
+
+   }
 
    getHP()
    {
@@ -608,14 +612,14 @@ class HealthComponent extends Component
    {
       if (!this.morf) return;
 
-      if (this.c++ % 70 == 0)
+      if (this.counter++ % 70 == 0)
       {
          this.state=!this.state;
          if (!this.state)
          {
             this.parent.speed = 20;
             this.armor=150;
-            this.c+=20;
+            this.counter+=20;
 
          }
          else
@@ -653,7 +657,6 @@ class HealthComponent extends Component
       let d = this.hp / this.startHp;
       return d;
 
-
    }
 
    damage(z)
@@ -684,13 +687,11 @@ class HealthComponent extends Component
 
 class MinionComponent extends Component
 {
-   constructor(hpComponent,moveComponent)
+   constructor()
    {
       super();
       this.boss = null;
-      this.hpComponent = hpComponent;
-      this.moveComponent = moveComponent;
-      this.c  =0;
+      this.counter =0;
    }
 
 
@@ -715,7 +716,7 @@ class MinionComponent extends Component
 
    update(delta)
    {
-      if (this.c++ % 5 != 0) return;
+      if (this.counter++ % 10 != 0) return;
 
       if (!this.boss)
       {
@@ -735,8 +736,7 @@ class MinionComponent extends Component
                   this.parent.end = g_enemies[i].end;
 
                   this.boss = g_enemies[i];
-
-                  this.moveComponent.calcRoute(false);
+                  this.parent.send(messagesEnum.route,true);
                   return;
                }
 
@@ -758,7 +758,8 @@ class MinionComponent extends Component
          }
          else
          {
-            if (this.hpComponent.hp >1)
+            let h = this.parent.get(messagesEnum.hp);
+            if (h >1)
             {
                let h1 = this.boss.get(messagesEnum.hp);
                this.boss.send(messagesEnum.hp,-1);
@@ -767,7 +768,8 @@ class MinionComponent extends Component
                {
                   bulletHandler.create(this.vector.x,this.vector.y,this.hpAim,30,color(0,240,0,222), 2,2,60);
                   healthSound.play();
-                  this.hpComponent.hp-=1;
+                  this.parent.send(messagesEnum.damage,1);
+
                }
             }
 
@@ -787,10 +789,9 @@ class MinionComponent extends Component
 
 class SpawnComponent extends Component
 {
-   constructor(hpComponent,manager,images)
+   constructor(manager,images)
    {
       super();
-      this.hpComponent = hpComponent;
       this.manager = manager;
       this.images = images;
    }
@@ -857,12 +858,11 @@ class SpawnComponent extends Component
 
    doOnDead()
    {
-      //   if (this.parent.remove) return;
 
       beepSound.play();
       let m = getRndInteger(4,8);
 
-      let hp = this.hpComponent.getHP();
+      let hp = this.parent.get(messagesEnum.hp);
 
       for (let i=0;i<m;i++)
       {
@@ -883,9 +883,9 @@ class SpawnComponent extends Component
 
 class SpawnComponent2 extends SpawnComponent
 {
-   constructor(hpComp,manager,images,images2)
+   constructor(manager,images,images2)
    {
-      super(hpComp,manager,images);
+      super(manager,images);
 
       this.images2 = images2;
       this.parent=null;
@@ -896,12 +896,13 @@ class SpawnComponent2 extends SpawnComponent
    {
       beepSound.play();
 
-      let hp = this.hpComponent.getHP();
+      let hp = this.parent.get(messagesEnum.hp);
 
+      if (hp<=25) hp = 30;
 
       if (!this.parent && this.images2)
       {
-         let e = this.manager.createSpawnEnemy(this.getPos(),this.parent.end,this.images,this.images2, hp- 25);
+         let e = this.manager.createSpawnEnemy(this.getPos(),this.parent.end,this.images,this.images2, hp - 25);
          e.parent = this;
 
          e.speed = this.parent.speed-5;
@@ -926,9 +927,9 @@ class SpawnComponent2 extends SpawnComponent
 
 class SpawnComponent3 extends SpawnComponent
 {
-   constructor(hpComp,manager,images)
+   constructor(manager,images)
    {
-      super(hpComp,manager,images);
+      super(manager,images);
       this.counter = 0;
 
    }
@@ -943,7 +944,8 @@ class SpawnComponent3 extends SpawnComponent
 
          if (this.counter++ % 25 !=0) return;
 
-         let hp = this.hpComponent.getHP();
+         let hp = this.parent.get(messagesEnum.hp);
+
 
          let e = this.manager.createEnemy(this.getPos(),this.parent.end,this.images,hp + 20);
 
@@ -1014,16 +1016,15 @@ var eState =
 
 class TowerSeekerComponent extends Component
 {
-   constructor(manager,mover)
+   constructor(manager)
    {
       super();
       this.dstate = eState.SEARCH;
       this.goal  = null;
       this.aim = createVector(1,0);
       this.dlength = 10;
-      this.mover  =mover;
       this.manager = manager;
-      this.c  =0;
+      this.count  =0;
    }
 
    init()
@@ -1034,7 +1035,7 @@ class TowerSeekerComponent extends Component
       {
          this.parent.end = ee.cell;
          this.goal = ee.tower;
-         this.mover.calcRoute(false);
+         this.parent.send(messagesEnum.route,false);         //TODO : everything ready here?
       }
       else {
          this.parent.end = Statics.exitCells[0];
@@ -1051,10 +1052,6 @@ class TowerSeekerComponent extends Component
       if (this.parent.speed == 0) return;
       if(this.dstate == eState.DONE)
       {
-         //   enemies_escaped += 1
-
-         //this.remove = true;
-         //this.speed = 0;
 
          return;
       }
@@ -1062,31 +1059,20 @@ class TowerSeekerComponent extends Component
       //console.log("reached end");
 
       let e = this.parent.getCellAtMe();
-      /*   if (Statics.exitCells.includes(e))
+
+
+      this.parent.speed = 0;
+
+      let ok=false;
+
+      let cells = getCells(e);
+      for (let i=0;i<cells.length;i++)
       {
-      g_enemies_escaped += 1
+         if (cells[i] && cells[i].tower && cells[i].tower==this.goal) {ok=true;break;}
+      }
 
-
-      this.remove = true;
-      this.speed = 0;
-
-
-      return;
-   }*/
-
-   this.parent.speed = 0;
-
-
-   let ok=false;
-
-   let cells = getCells(e);
-   for (let i=0;i<cells.length;i++)
-   {
-      if (cells[i] && cells[i].tower && cells[i].tower==this.goal) {ok=true;break;}
+      this.dstate = ok?eState.DRILL:eState.THINK;
    }
-
-   this.dstate = ok?eState.DRILL:eState.THINK;
-}
 
 aimAt()
 {
@@ -1105,7 +1091,7 @@ aimAt()
 
 update(delta)
 {
-   if (this.c++ % 10 ==0)
+   if (this.count++ % 10 ==0)
    {
 
       this.aimAt();
@@ -1120,9 +1106,7 @@ update(delta)
          }
          this.speed= 40;
          this.dstate =eState.SEARCH;
-
-         this.mover.calcRoute(false);
-
+         this.parent.send(messagesEnum.route,false);
 
       }
       else if (this.dstate === eState.DRILL)
@@ -1132,7 +1116,6 @@ update(delta)
          if (this.dlength > 25)
          {
             this.doOnDrillDone();
-            //   console.log("drilling done");
             this.dstate = eState.PULL_UP;
 
          }
@@ -1149,8 +1132,8 @@ update(delta)
       }
 
    }
-
-   renderSystem.addRender( new RenderSeekerAim(this.parent.vector.x,this.parent.vector.y,this.aim,this.dlength));
+   if (this.dstate != eState.DONE)
+      renderSystem.addRender( new RenderSeekerAim(this.parent.vector.x,this.parent.vector.y,this.aim,this.dlength));
 
 }
 
@@ -1161,7 +1144,7 @@ doOnPulledUp()
    this.parent.end = Statics.exitCells[0];
    this.goal  =null;
    this.parent.speed = 40;
-   this.mover.calcRoute(true);
+   this.parent.send(messagesEnum.route,true);
 }
 
 doOnDrillDone()
